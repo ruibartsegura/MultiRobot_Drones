@@ -1,17 +1,18 @@
-#ifndef REYNOLD_RULES_NODE_HPP_
-#define REYNOLD_RULES_NODE_HPP_
+#ifndef REYNOLD_RULES__REYNOLDRULESNODE_HPP_
+#define REYNOLD_RULES__REYNOLDRULESNODE_HPP_
 
 #include "rclcpp/rclcpp.hpp"
+#include "std_msgs/msg/int32.hpp"
 
 namespace reynold_rules
 {
 
-class Reynold_Rules_Node : public rclcpp::Node
+class ReynoldRulesNode : public rclcpp::Node
 {
 public:
-  RCLCPP_SMART_PTR_DEFINITIONS(Reynold_Rules_Node)
+  RCLCPP_SMART_PTR_DEFINITIONS(ReynoldRulesNode)
 
-  Reynold_Rules_Node();
+  ReynoldRulesNode();
   void control_cycle();
 
 private:
@@ -22,4 +23,4 @@ private:
 
 }  //  namespace reynold_rules
 
-#endif  // REYNOLD_RULES_NODE_HPP_
+#endif  // REYNOLD_RULES__REYNOLDRULESNODE_HPP_

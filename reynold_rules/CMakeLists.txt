@@ -14,12 +14,16 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(reynold_rules_interfaces REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
 set(dependencies
     rclcpp
     std_msgs
+    geometry_msgs
+    reynold_rules_interfaces
 )
 
 # Using a library

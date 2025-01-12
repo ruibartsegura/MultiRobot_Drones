@@ -3,6 +3,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "reynold_rules_interfaces/msg/vector_array.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 
 namespace reynold_rules
 {
@@ -24,6 +25,11 @@ public:
   Vector3d avoidance_rule();
 
 private:
+  double NUMBER_DRONES {4};
+  nav_msgs::msg::Odometry drones[NUMBER_DRONES];
+
+
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub_;
 
   rclcpp::TimerBase::SharedPtr timer_;
 };

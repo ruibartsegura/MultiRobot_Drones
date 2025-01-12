@@ -1,5 +1,5 @@
+#include <memory>
 #include "rclcpp/rclcpp.hpp"
-
 #include "reynold_rules/reynold_rules_node.hpp"
 
 using namespace std::chrono_literals;

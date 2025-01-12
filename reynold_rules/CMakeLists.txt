@@ -15,6 +15,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(reynold_rules_interfaces REQUIRED)
 
 ## System dependencies are found with CMake's conventions
@@ -23,6 +24,7 @@ set(dependencies
     rclcpp
     std_msgs
     geometry_msgs
+    nav_msgs
     reynold_rules_interfaces
 )
 
@@ -38,6 +40,7 @@ ament_target_dependencies(reynold_rules_class ${dependencies})
 target_link_libraries(reynold_rules_class ${PROJECT_NAME})
 
 install(TARGETS
+  ${PROJECT_NAME}
   reynold_rules_class
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib

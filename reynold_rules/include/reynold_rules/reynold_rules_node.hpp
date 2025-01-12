@@ -25,10 +25,12 @@ public:
   Vector3d avoidance_rule();
 
 private:
-  double NUMBER_DRONES {4};
+  static const int NUMBER_DRONES {4};
   nav_msgs::msg::Odometry drones[NUMBER_DRONES];
 
+  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
 
+  // Subscribers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub_;
 
   rclcpp::TimerBase::SharedPtr timer_;

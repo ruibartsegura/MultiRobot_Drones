@@ -40,12 +40,27 @@ ReynoldRulesNode::ReynoldRulesNode()
   for (int n = 1; n <= NUMBER_DRONES; n++) {
     std::string topic_name = "/cf_" + std::to_string(n) + "/odom";
     RCLCPP_INFO(get_logger(), "Drone names: %s", topic_name.c_str());
-    drones_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-        topic_name, 
+  }
+    drones_sub1_ = create_subscription<nav_msgs::msg::Odometry>(
+        "/cf_1/odom", 
         10,
         std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
     );
-  }
+    drones_sub2_ = create_subscription<nav_msgs::msg::Odometry>(
+        "/cf_2/odom", 
+        10,
+        std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
+    );
+    drones_sub3_ = create_subscription<nav_msgs::msg::Odometry>(
+        "/cf_3/odom", 
+        10,
+        std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
+    );
+    drones_sub4_ = create_subscription<nav_msgs::msg::Odometry>(
+        "/cf_4/odom", 
+        10,
+        std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
+    );
 
   map_sub_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
       "map", 
@@ -86,9 +101,8 @@ void ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPt
 void
 ReynoldRulesNode::control_cycle()
 {
-  while (true){
-    void();
-  }
+  void();
+
 }
 
 Vector3d

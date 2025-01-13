@@ -54,6 +54,12 @@ private:
 
   // Subscribers
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
+
+  // Subscribers
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub1_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub2_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub3_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub4_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub_;
 
   void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
@@ -61,6 +67,7 @@ private:
   
 
   rclcpp::TimerBase::SharedPtr timer_;
+  int a = 3;
 };
 
 }  //  namespace reynold_rules

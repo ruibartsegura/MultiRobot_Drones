@@ -16,6 +16,7 @@ find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(reynold_rules_interfaces REQUIRED)
+find_package(nav_msgs REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -24,6 +25,7 @@ set(dependencies
     std_msgs
     geometry_msgs
     reynold_rules_interfaces
+    nav_msgs
 )
 
 # Using a library

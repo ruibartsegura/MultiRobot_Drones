@@ -4,6 +4,13 @@
 #include "rclcpp/rclcpp.hpp"
 #include "reynold_rules_interfaces/msg/vector_array.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
+#include "geometry_msgs/msg/point.hpp"
+#include "geometry_msgs/msg/vector3.hpp"
+
+#include <vector>
+#include <queue>
+#include <set>
 
 namespace reynold_rules
 {
@@ -26,12 +33,32 @@ public:
 
 private:
   static const int NUMBER_DRONES {4};
-  nav_msgs::msg::Odometry drones[NUMBER_DRONES];
+  std::vector<nav_msgs::msg::Odometry::SharedPtr> drones_;
 
-  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
+  // Map
+  nav_msgs::msg::OccupancyGrid::SharedPtr map_;
+
+  // Nav_2_Point
+  std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(
+      const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target);
+
+  std::vector<geometry_msgs::msg::Point> findNeighbors(
+    const std::vector<geometry_msgs::msg::Point>& waypoints, const geometry_msgs::msg::Point& currentWp, int step = 2);
+
+  bool isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end);
+
+  geometry_msgs::msg::Point target_point;
+  geometry_msgs::msg::Point prev_point;
+  std::vector<geometry_msgs::msg::Point> waypoints_;
+  std::vector<geometry_msgs::msg::Point> path_;
 
   // Subscribers
+  void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub_;
+
+  void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
+  rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
+  
 
   rclcpp::TimerBase::SharedPtr timer_;
 };

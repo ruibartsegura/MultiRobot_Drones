@@ -31,9 +31,13 @@ private:
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
 
   // Subscribers
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub1_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub2_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub3_;
+  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub4_;
 
   rclcpp::TimerBase::SharedPtr timer_;
+  int a = 3;
 };
 
 }  //  namespace reynold_rules

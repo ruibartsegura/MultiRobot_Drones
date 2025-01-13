@@ -54,8 +54,6 @@ private:
 
   // Subscribers
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
-
-  // Subscribers
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub1_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub2_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr drones_sub3_;

@@ -40,6 +40,11 @@ private:
   // Map
   nav_msgs::msg::OccupancyGrid::SharedPtr map_;
 
+  // Separation
+  int view_range_;
+  std::vector<nav_msgs::msg::Odometry> robots_;
+  std::vector<geometry_msgs::msg::Point> separation_vectors_;
+
   // Nav_2_Point
   std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(
       const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target);

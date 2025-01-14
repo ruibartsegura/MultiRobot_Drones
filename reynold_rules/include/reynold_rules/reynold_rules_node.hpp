@@ -69,10 +69,6 @@ private:
   void checkPathsBetweenWaypoints();
 
   rclcpp::TimerBase::SharedPtr timer_;
-  int view_range_;
-  int n_robots_;
-  std::vector<nav_msgs::msg::Odometry> robots_;
-  std::vector<geometry_msgs::msg::Point> separation_vectors_;
 };
 
 }  //  namespace reynold_rules

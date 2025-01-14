@@ -150,7 +150,6 @@ ReynoldRulesNode::calc_vector(geometry_msgs::msg::Point position, int num){
 Vector3d
 ReynoldRulesNode::separation_rule()
 {
-
   declare_parameter<int>("view_range", 0.3);
   get_parameter("view_range", view_range_);
   while (true){

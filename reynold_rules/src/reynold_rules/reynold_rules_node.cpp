@@ -617,4 +617,29 @@ ReynoldRulesNode::rendezvous_protocol()
 	}
 }
 
+std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control_setup()
+{
+	this->declare_parameter("formation_type", 0);
+	this->declare_parameter("side_length", 0);
+
+	this->get_parameter("formation_type", formation_type_);
+	this->get_parameter("side_length", side_length_);
+
+	RCLCPP_INFO(this->get_logger(), "formation type: ", std::to_string(formation_type_));
+}
+
+std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control()
+{
+	switch (formation_type_) {
+	case LINE: break;
+
+	case TRIANGLE: break;
+
+	case SQUARE: break;
+
+	default: // NO FORMATION
+		break;
+	}
+}
+
 } //  namespace reynold_rules

@@ -77,137 +77,114 @@ ReynoldRulesNode::ReynoldRulesNode()
 
   timer_ = create_wall_timer(
     500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
-}
-
-void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
-{
-    std::string number = data->child_frame_id.substr(std::strlen("cf_"));
-    RCLCPP_INFO(get_logger(), "Drone number: %s", number.c_str());
-
-    // Asignación de SharedPtr en el vector
-    int drone_number = std::stoi(number);
-
-    drones_[drone_number] = data;
-}
-
-void ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
-{
-  if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
-    this->map_ = data;  // Asigna el primer mapa recibido a map_
-    //this->map_->data;   // Usa map_ para acceder a los datos si es necesario
-  }
-}
-
-Vector3d
-ReynoldRulesNode::separation_rule()
-{
-  void();
-}
-
-Vector3d
-ReynoldRulesNode::aligment_rule()
-{
-  void();
-}
-
-Vector3d
-ReynoldRulesNode::cohesion_rule()
-{
-  void();
-}
-
-// Find the neighbors of a waypoint
-std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findNeighbors(
-  const std::vector<geometry_msgs::msg::Point>& waypoints, 
-  const geometry_msgs::msg::Point& currentWp, int step)
-{
-  std::vector<geometry_msgs::msg::Point> neighbors;
-  for (const auto& wp : waypoints) {
-    if ((abs(wp.x - currentWp.x) == step && wp.y == currentWp.y) ||
-      (abs(wp.y - currentWp.y) == step && wp.x == currentWp.x)) {
-      neighbors.push_back(wp);
-    }
-  }
-  return neighbors;
-}
-
-// Check if between waypoints there is no obstacle
-bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end) {
-  if (!this->map_) return false;
-
-  int startI = static_cast<int>((start.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
-  int startJ = static_cast<int>((start.first - this->map_->info.origin.position.x) / this->map_->info.resolution);
-  int endI = static_cast<int>((end.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
-  int endJ = static_cast<int>((end.first - this->map_->info.origin.position.x) / this->map_->info.resolution);
-
-  RCLCPP_WARN(this->get_logger(), "startI %d).", startI);
-  RCLCPP_WARN(this->get_logger(), "startJ %d).", startJ);
-  RCLCPP_WARN(this->get_logger(), "endI %d).", endI);
-  RCLCPP_WARN(this->get_logger(), "endJ %d).", endJ);
-
-  int deltaI = abs(endI - startI);
-  int deltaJ = abs(endJ - startJ);
-  int signI = (endI > startI) ? 1 : -1;
-  int signJ = (endJ > startJ) ? 1 : -1;
-
-  int error = deltaI - deltaJ;
-  int currentI = startI, currentJ = startJ;
-
-  while (true) {
-    int index = this->map_->info.width * currentI + currentJ;
-    if (index < 0 || index >= static_cast<int>(this->map_->data.size())) return false;
-    if (this->map_->data[index] == 100) return false;
-
-    if (currentI == endI && currentJ == endJ) break;
-
-    int error2 = 2 * error;
-    if (error2 > -deltaJ) {
-      error -= deltaJ;
-      currentI += signI;
-    }
-    if (error2 < deltaI) {
-      error += deltaI;
-      currentJ += signJ;
-    }
-  }
-
-  return true;
-}
-
-Vector3d
-ReynoldRulesNode::nav_2_point_rule()
-{
-  void();
-}
-
-Vector3d
-ReynoldRulesNode::avoidance_rule()
-{
-  void();
+  declare_parameter<int>("n_robots", 10);
+  get_parameter("n_robots", n_robots_);
 }
 
 void
 ReynoldRulesNode::control_cycle()
 {
-  //std::cout << "Map" << this->map_ << std::endl;
-  return;
+  while (true){
+    void();
+  }
 }
 
-void ReynoldRulesNode::checkPathsBetweenWaypoints() {
-    for (const auto& wp : waypoints_) {
-        auto neighbors = findNeighbors(waypoints_, wp);
-        for (const auto& neighbor : neighbors) {
-            auto start = std::make_pair(wp.x, wp.y);
-            auto end = std::make_pair(neighbor.x, neighbor.y);
-            if (isPathClear(start, end)) {
-                RCLCPP_INFO(this->get_logger(), "Free way between (%f, %f) and (%f, %f).",
-                            start.first, start.second, end.first, end.second);
-            } else {
-                RCLCPP_WARN(this->get_logger(), "Obstacle between (%f, %f) and (%f, %f).",
-                            start.first, start.second, end.first, end.second);
-            }
-        }
-    }
+
+double
+ReynoldRulesNode::get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2){
+  auto x = pos1.x - pos2.x;
+  auto y = pos1.y - pos2.y;
+  return sqrt(x * x + y * y);
 }
+
+geometry_msgs::msg::Point
+ReynoldRulesNode::calc_vector(geometry_msgs::msg::Point position, int num){
+  geometry_msgs::msg::Point repulsive_vector; //k is the cte of force
+  double k = 0.01;
+
+  for (int i = 0; i < n_robots_; i++){
+    // Avoid calculating the robotr's own vector
+    if (i != num){
+      // Get the distance betwen the robots
+      double dist = get_distance(position, robots_[i].pose.pose.position);
+    
+
+      // Check if the distance is in the radious
+      if ((dist > 0.0) && (dist < view_range_)){
+        // Get the x, y coords of the vector
+        auto x = position.x - robots_[i].pose.pose.position.x;
+        auto y = position.y - robots_[i].pose.pose.position.y;
+
+        // Normalize the vector
+        auto norm = sqrt(x * x + y * y);
+
+        double direction[2];
+        if (norm > 0){
+            direction[0] = x / norm;
+            direction[1] = y / norm;
+        } else {
+            direction[0] = 0.00;
+            direction[1] = 0.00;
+        }
+
+        // Magnitude od the repulsice vector
+        auto magnitude = k / (dist * dist);
+
+        // Sum to the total the repulsive vector of robot_i
+        repulsive_vector.x += magnitude * direction[0];
+        repulsive_vector.y += magnitude * direction[1];
+      }
+    }
+  }
+  return repulsive_vector;
+}
+
+Vector3d
+ReynoldRulesNode::separation_rule()
+{
+
+  declare_parameter<int>("view_range", 0.3);
+  get_parameter("view_range", view_range_);
+  while (true){
+    for (int i = 0; i < n_robots_; i++){
+        separation_vectors_.push_back(
+            calc_vector(robots_[i].pose.pose.position, i)
+        );
+    }
+  }
+}
+
+Vector3d
+ReynoldRulesNode::aligment_rule()
+{
+  while (true){
+    void();
+  }
+}
+
+Vector3d
+ReynoldRulesNode::cohesion_rule()
+{
+  while (true){
+    void();
+  }
+}
+
+Vector3d
+ReynoldRulesNode::nav_2_point_rule()
+{
+  while (true){
+    void();
+  }
+}
+
+Vector3d
+ReynoldRulesNode::avoidance_rule()
+{
+  while (true){
+    void();
+  }
+}
+
 
 }  //  namespace reynold_rules

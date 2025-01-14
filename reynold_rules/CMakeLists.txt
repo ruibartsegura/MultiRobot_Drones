@@ -15,7 +15,6 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(reynold_rules_interfaces REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -29,16 +28,16 @@ set(dependencies
 # Using a library
 include_directories(include)
 add_library(${PROJECT_NAME} SHARED
-  src/reynold_rules/reynold_rules_node.cpp
+  src/${PROJECT_NAME}/reynold_rules_node.cpp
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
-add_executable(reynold_rules_class src/reynold_rules_class.cpp)
-ament_target_dependencies(reynold_rules_class ${dependencies})
-target_link_libraries(reynold_rules_class ${PROJECT_NAME})
+add_executable(reynold_rules_main src/reynold_rules_main.cpp)
+ament_target_dependencies(reynold_rules_main ${dependencies})
+target_link_libraries(reynold_rules_main ${PROJECT_NAME})
 
 install(TARGETS
-  reynold_rules_class
+  reynold_rules_main
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

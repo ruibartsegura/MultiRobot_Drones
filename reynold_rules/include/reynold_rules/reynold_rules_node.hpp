@@ -64,8 +64,10 @@ private:
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
   
 
+  void checkPathsBetweenWaypoints();
+
   rclcpp::TimerBase::SharedPtr timer_;
-  int a = 3;
+
 };
 
 }  //  namespace reynold_rules

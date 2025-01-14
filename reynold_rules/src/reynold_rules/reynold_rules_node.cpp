@@ -68,10 +68,12 @@ ReynoldRulesNode::ReynoldRulesNode()
   );
 
   map_sub_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
-      "map", 
+      "/map", 
       10,
       std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
   );
+
+  checkPathsBetweenWaypoints();
 
   timer_ = create_wall_timer(
     500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
@@ -88,62 +90,124 @@ void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr da
     drones_[drone_number] = data;
 }
 
-
 void ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
 {
   if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
     this->map_ = data;  // Asigna el primer mapa recibido a map_
-    this->map_->data;   // Usa map_ para acceder a los datos si es necesario
+    //this->map_->data;   // Usa map_ para acceder a los datos si es necesario
   }
-}
-
-
-void
-ReynoldRulesNode::control_cycle()
-{
-  void();
-
 }
 
 Vector3d
 ReynoldRulesNode::separation_rule()
 {
-  while (true){
-    void();
-  }
+  void();
 }
 
 Vector3d
 ReynoldRulesNode::aligment_rule()
 {
-  while (true){
-    void();
-  }
+  void();
 }
 
 Vector3d
 ReynoldRulesNode::cohesion_rule()
 {
-  while (true){
-    void();
+  void();
+}
+
+// Find the neighbors of a waypoint
+std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findNeighbors(
+  const std::vector<geometry_msgs::msg::Point>& waypoints, 
+  const geometry_msgs::msg::Point& currentWp, int step)
+{
+  std::vector<geometry_msgs::msg::Point> neighbors;
+  for (const auto& wp : waypoints) {
+    if ((abs(wp.x - currentWp.x) == step && wp.y == currentWp.y) ||
+      (abs(wp.y - currentWp.y) == step && wp.x == currentWp.x)) {
+      neighbors.push_back(wp);
+    }
   }
+  return neighbors;
+}
+
+// Check if between waypoints there is no obstacle
+bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end) {
+  if (!this->map_) return false;
+
+  int startI = static_cast<int>((start.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
+  int startJ = static_cast<int>((start.first - this->map_->info.origin.position.x) / this->map_->info.resolution);
+  int endI = static_cast<int>((end.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
+  int endJ = static_cast<int>((end.first - this->map_->info.origin.position.x) / this->map_->info.resolution);
+
+  RCLCPP_WARN(this->get_logger(), "startI %d).", startI);
+  RCLCPP_WARN(this->get_logger(), "startJ %d).", startJ);
+  RCLCPP_WARN(this->get_logger(), "endI %d).", endI);
+  RCLCPP_WARN(this->get_logger(), "endJ %d).", endJ);
+
+  int deltaI = abs(endI - startI);
+  int deltaJ = abs(endJ - startJ);
+  int signI = (endI > startI) ? 1 : -1;
+  int signJ = (endJ > startJ) ? 1 : -1;
+
+  int error = deltaI - deltaJ;
+  int currentI = startI, currentJ = startJ;
+
+  while (true) {
+    int index = this->map_->info.width * currentI + currentJ;
+    if (index < 0 || index >= static_cast<int>(this->map_->data.size())) return false;
+    if (this->map_->data[index] == 100) return false;
+
+    if (currentI == endI && currentJ == endJ) break;
+
+    int error2 = 2 * error;
+    if (error2 > -deltaJ) {
+      error -= deltaJ;
+      currentI += signI;
+    }
+    if (error2 < deltaI) {
+      error += deltaI;
+      currentJ += signJ;
+    }
+  }
+
+  return true;
 }
 
 Vector3d
 ReynoldRulesNode::nav_2_point_rule()
 {
-  while (true){
-    void();
-  }
+  void();
 }
 
 Vector3d
 ReynoldRulesNode::avoidance_rule()
 {
-  while (true){
-    void();
-  }
+  void();
 }
 
+void
+ReynoldRulesNode::control_cycle()
+{
+  //std::cout << "Map" << this->map_ << std::endl;
+  return;
+}
+
+void ReynoldRulesNode::checkPathsBetweenWaypoints() {
+    for (const auto& wp : waypoints_) {
+        auto neighbors = findNeighbors(waypoints_, wp);
+        for (const auto& neighbor : neighbors) {
+            auto start = std::make_pair(wp.x, wp.y);
+            auto end = std::make_pair(neighbor.x, neighbor.y);
+            if (isPathClear(start, end)) {
+                RCLCPP_INFO(this->get_logger(), "Free way between (%f, %f) and (%f, %f).",
+                            start.first, start.second, end.first, end.second);
+            } else {
+                RCLCPP_WARN(this->get_logger(), "Obstacle between (%f, %f) and (%f, %f).",
+                            start.first, start.second, end.first, end.second);
+            }
+        }
+    }
+}
 
 }  //  namespace reynold_rules

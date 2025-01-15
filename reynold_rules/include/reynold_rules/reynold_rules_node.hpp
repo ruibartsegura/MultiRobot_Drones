@@ -18,32 +18,33 @@ namespace reynold_rules
 class ReynoldRulesNode : public rclcpp::Node
 {
 public:
-  using Vector3d = reynold_rules_interfaces::msg::VectorArray;
+  using ArrayVector3d = reynold_rules_interfaces::msg::VectorArray;
   
   RCLCPP_SMART_PTR_DEFINITIONS(ReynoldRulesNode)
   
   ReynoldRulesNode();
   void control_cycle();
-  double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
-  geometry_msgs::msg::Point calc_vector(geometry_msgs::msg::Point position, int num);
 
-  Vector3d separation_rule();
-  Vector3d aligment_rule();
-  Vector3d cohesion_rule();
-  Vector3d nav_2_point_rule();
-  Vector3d avoidance_rule();
+  ArrayVector3d separation_rule();
+  ArrayVector3d aligment_rule();
+  ArrayVector3d cohesion_rule();
+  ArrayVector3d nav_2_point_rule();
+  ArrayVector3d avoidance_rule();
 
 private:
   static const int NUMBER_DRONES {4};
-  std::vector<nav_msgs::msg::Odometry::SharedPtr> drones_;
+  double MAX_LIN_VEL {0.3};
+  double DIST_THRESHOLD {0.3};
+  std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
+
+  double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
+  geometry_msgs::msg::Vector3 calc_vector(geometry_msgs::msg::Point position, int num);
 
   // Map
   nav_msgs::msg::OccupancyGrid::SharedPtr map_;
 
   // Separation
   int view_range_;
-  std::vector<nav_msgs::msg::Odometry> robots_;
-  std::vector<geometry_msgs::msg::Point> separation_vectors_;
 
   // Nav_2_Point
   std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(
@@ -53,6 +54,8 @@ private:
     const std::vector<geometry_msgs::msg::Point>& waypoints, const geometry_msgs::msg::Point& currentWp, int step = 2);
 
   bool isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end);
+
+  geometry_msgs::msg::Vector3 vector_2_points(geometry_msgs::msg::Point point1, geometry_msgs::msg::Point point2);
 
   geometry_msgs::msg::Point target_point;
   geometry_msgs::msg::Point prev_point;

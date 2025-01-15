@@ -40,9 +40,6 @@ ReynoldRulesNode::ReynoldRulesNode()
       robots_.resize(NUMBER_DRONES);  // Redimensiona si es necesario
   }
 
-  for (int n = 1; n <= NUMBER_DRONES; n++) {
-    std::string topic_name = "/cf_" + std::to_string(n) + "/odom";
-  }
   drones_sub1_ = create_subscription<nav_msgs::msg::Odometry>(
       "/cf_1/odom", 
       10,
@@ -70,8 +67,6 @@ ReynoldRulesNode::ReynoldRulesNode()
       std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
   );
 
-  checkPathsBetweenWaypoints();
-
   timer_ = create_wall_timer(
     500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
 }
@@ -91,6 +86,7 @@ void ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPt
   if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
     this->map_ = data;  // Asigna el primer mapa recibido a map_
     this->map_->data;   // Usa map_ para acceder a los datos si es necesario
+    checkPathsBetweenWaypoints();
   }
 }
 

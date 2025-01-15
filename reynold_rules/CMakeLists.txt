@@ -41,6 +41,8 @@ add_executable(reynold_rules_class src/reynold_rules_class.cpp)
 ament_target_dependencies(reynold_rules_class ${dependencies})
 target_link_libraries(reynold_rules_class ${PROJECT_NAME})
 
+install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+
 install(TARGETS
   ${PROJECT_NAME}
   reynold_rules_class

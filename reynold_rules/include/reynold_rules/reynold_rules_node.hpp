@@ -37,6 +37,8 @@ public:
 
 	/// @brief execute the rendezvous_protocol and update each robot's path in paths_
 	void rendezvous_protocol();
+  	std::vector<geometry_msgs::msg::Vector3> formation_control_setup();
+  	std::vector<geometry_msgs::msg::Vector3> formation_control();
 
 private:
 	bool READY = false;
@@ -52,10 +54,20 @@ private:
 	double nav2point_weight_{0.0};
 	double obstacle_avoidance_weight_{0.0};
 
-	std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
-	std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> subscribers_;
+  // Formation Control
+  static const int LINE = 0;
+  static const int TRIANGLE = 1;
+  static const int SQUARE = 2;
 
-	std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
+  int side_length_;
+  int formation_type_;
+
+  std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
+  rclcpp::TimerBase::SharedPtr timer_;
+
+  // Pub and subs vectors
+  std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
+  std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> subscribers_;
 
 	// Map
 	nav_msgs::msg::OccupancyGrid::SharedPtr map_;

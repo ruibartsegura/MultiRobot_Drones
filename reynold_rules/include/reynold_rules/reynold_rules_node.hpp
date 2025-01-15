@@ -37,14 +37,17 @@ private:
   double DIST_THRESHOLD {0.3};
   std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
 
-  double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
-  geometry_msgs::msg::Vector3 calc_vector(geometry_msgs::msg::Point position, int num);
-
   // Map
   nav_msgs::msg::OccupancyGrid::SharedPtr map_;
 
   // Separation
   int view_range_;
+  double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
+  geometry_msgs::msg::Vector3 calc_sep_vector(geometry_msgs::msg::Point position, int num);
+
+  // Cohesion
+  geometry_msgs::msg::Point calc_average_pos(std::vector<nav_msgs::msg::Odometry>);
+  geometry_msgs::msg::Vector3 calc_cohesion_vector(geometry_msgs::msg::Point robot_pos);
 
   // Nav_2_Point
   std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(

@@ -74,6 +74,10 @@ ReynoldRulesNode::ReynoldRulesNode()
 
   timer_ = create_wall_timer(
     500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+
+  // retrieve view_range parameter
+  declare_parameter<int>("view_range", 0.3);
+  get_parameter("view_range", view_range_);
 }
 
 void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
@@ -102,7 +106,7 @@ ReynoldRulesNode::get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::ms
 }
 
 geometry_msgs::msg::Vector3
-ReynoldRulesNode::calc_vector(geometry_msgs::msg::Point position, int num)
+ReynoldRulesNode::calc_sep_vector(geometry_msgs::msg::Point position, int num)
 {
   geometry_msgs::msg::Vector3 repulsive_vector; //k is the cte of force
   double k = 0.01;
@@ -147,13 +151,13 @@ ArrayVector3d
 ReynoldRulesNode::separation_rule()
 {
   ArrayVector3d separation_vectors;
-  declare_parameter<int>("view_range", 0.3);
-  get_parameter("view_range", view_range_);
 
   for (int i = 0; i < NUMBER_DRONES; i++) {
-    geometry_msgs::msg::Vector3 vec = calc_vector(this->robots_[i]->pose.pose.position, i);
+    geometry_msgs::msg::Vector3 vec = calc_sep_vector(this->robots_[i]->pose.pose.position, i);
     separation_vectors.vectors.push_back(vec); // Agregar al vector del mensaje
   }
+
+  return separation_vectors;
 }
 
 ArrayVector3d
@@ -162,10 +166,57 @@ ReynoldRulesNode::aligment_rule()
   void();
 }
 
+geometry_msgs::msg::Point
+ReynoldRulesNode::calc_average_pos(std::vector<nav_msgs::msg::Odometry> positions)
+{
+  geometry_msgs::msg::Point average_pos;
+
+  for (nav_msgs::msg::Odometry position : positions) {
+    average_pos.x += position.pose.pose.position.x;
+    average_pos.y += position.pose.pose.position.y;
+  }
+
+  average_pos.x = average_pos.x / positions.size();
+  average_pos.y = average_pos.y / positions.size();
+
+  return average_pos;
+
+}
+
+geometry_msgs::msg::Vector3
+ReynoldRulesNode::calc_cohesion_vector(geometry_msgs::msg::Point robot_pos)
+{
+  geometry_msgs::msg::Vector3 vector;
+  std::vector<nav_msgs::msg::Odometry> neighbors;
+
+  // Make a list with all robots poses in the range of cohesion
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+      double dist = get_distance(robot_pos, robot->pose.pose.position);
+
+      if (dist < view_range_) {
+          neighbors.push_back(*robot);
+      }
+  }
+
+  // Calculate vector from robot_pos to average_pos of neighbors
+  geometry_msgs::msg::Point average_pos = calc_average_pos(neighbors);
+  vector.x = average_pos.x - robot_pos.x;
+  vector.y = average_pos.y - robot_pos.y;
+
+  return vector;
+}
+
 ArrayVector3d
 ReynoldRulesNode::cohesion_rule()
 {
-  void();
+  ArrayVector3d cohesion_vectors;
+
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+      geometry_msgs::msg::Vector3 cohesion_vector = calc_cohesion_vector(robot->pose.pose.position);
+      cohesion_vectors.vectors.push_back(cohesion_vector);
+  }
+
+  return cohesion_vectors;
 }
 
 // Find the neighbors of a waypoint

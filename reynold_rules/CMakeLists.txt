@@ -22,7 +22,6 @@ set(dependencies
     rclcpp
     std_msgs
     geometry_msgs
-    reynold_rules_interfaces
 )
 
 # Using a library

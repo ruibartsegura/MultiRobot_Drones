@@ -2,26 +2,23 @@
 #define REYNOLD_RULES__REYNOLDRULESNODE_HPP_
 
 #include "rclcpp/rclcpp.hpp"
-#include "reynold_rules_interfaces/msg/vector_array.hpp"
 
 namespace reynold_rules
 {
 
 class ReynoldRulesNode : public rclcpp::Node
 {
-public:
-  using Vector3d = reynold_rules_interfaces::msg::VectorArray;
-  
+public:  
   RCLCPP_SMART_PTR_DEFINITIONS(ReynoldRulesNode)
   
   ReynoldRulesNode();
   void control_cycle();
 
-  Vector3d separation_rule();
-  Vector3d aligment_rule();
-  Vector3d cohesion_rule();
-  Vector3d nav_2_point_rule();
-  Vector3d avoidance_rule();
+  std::vector<float> separation_rule();
+  std::vector<float> aligment_rule();
+  std::vector<float> cohesion_rule();
+  std::vector<float> nav_2_point_rule();
+  std::vector<float> avoidance_rule();
 
 private:
 

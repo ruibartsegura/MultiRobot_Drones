@@ -13,8 +13,6 @@ namespace reynold_rules
 ReynoldRulesNode::ReynoldRulesNode()
 : Node("publisher_node")
 {
-  ReynohumbleldRulesNode::formation_control_setup();
-
   timer_ = create_wall_timer(
     500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
 }
@@ -23,7 +21,7 @@ void
 ReynoldRulesNode::control_cycle()
 {
   while (true){
-    int i = 1;
+    continue;
   }
 }
 
@@ -31,7 +29,7 @@ std::vector<float>
 ReynoldRulesNode::separation_rule()
 {
   while (true){
-    int i = 2;
+    continue;
   }
 }
 
@@ -39,7 +37,7 @@ std::vector<float>
 ReynoldRulesNode::aligment_rule()
 {
   while (true){
-    int i = 1;
+    continue;
   }
 }
 
@@ -47,7 +45,7 @@ std::vector<float>
 ReynoldRulesNode::cohesion_rule()
 {
   while (true){
-    int i = 1;
+    continue;
   }
 }
 
@@ -55,7 +53,7 @@ std::vector<float>
 ReynoldRulesNode::nav_2_point_rule()
 {
   while (true){
-    int i = 1;
+    continue;
   }
 }
 
@@ -63,7 +61,7 @@ std::vector<float>
 ReynoldRulesNode::avoidance_rule()
 {
   while (true){
-    int i = 1;
+    continue;
   }
 }
 

@@ -45,6 +45,9 @@ private:
   double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
   geometry_msgs::msg::Vector3 calc_sep_vector(geometry_msgs::msg::Point position, int num);
 
+  // Alignment
+  geometry_msgs::msg::Vector3 calc_average_velocity();
+
   // Cohesion
   geometry_msgs::msg::Point calc_average_pos(std::vector<nav_msgs::msg::Odometry>);
   geometry_msgs::msg::Vector3 calc_cohesion_vector(geometry_msgs::msg::Point robot_pos);

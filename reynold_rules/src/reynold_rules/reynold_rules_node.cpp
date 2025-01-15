@@ -160,10 +160,35 @@ ReynoldRulesNode::separation_rule()
   return separation_vectors;
 }
 
+geometry_msgs::msg::Vector3
+ReynoldRulesNode::calc_average_velocity()
+{
+  geometry_msgs::msg::Vector3 avg_velocity;
+
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+      avg_velocity.x += robot->twist.twist.linear.x;
+      avg_velocity.y += robot->twist.twist.linear.y;
+  }
+
+  avg_velocity.x /= NUMBER_DRONES;
+  avg_velocity.y /= NUMBER_DRONES;
+
+  return avg_velocity;
+}
+
 ArrayVector3d
 ReynoldRulesNode::aligment_rule()
 {
-  void();
+  geometry_msgs::msg::Vector3 avg_velocity = calc_average_velocity();
+  ArrayVector3d alignment_vectors;
+
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+    geometry_msgs::msg::Vector3 alignment_vector;
+    alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
+    alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
+    alignment_vectors.vectors.push_back(alignment_vector);
+  }
+  return alignment_vectors;
 }
 
 geometry_msgs::msg::Point

@@ -15,7 +15,6 @@ def generate_launch_description():
                           executable='reynold_rules_class',
                           output='screen',
                           prefix=['/usr/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose'],
-                          parameters=[param_file],
                           remappings=[])
 
 

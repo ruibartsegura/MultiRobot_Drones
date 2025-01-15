@@ -1,4 +1,4 @@
-reynold_rules_node:
+reynold_rules:
   ros__parameters:
     use_sim_time: false
     SPEED_LINEAR: 0.2

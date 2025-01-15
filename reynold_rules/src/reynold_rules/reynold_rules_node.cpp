@@ -78,14 +78,13 @@ void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr da
     // Asignación de SharedPtr en el vector
     int drone_number = std::stoi(number);
 
-    robots_[drone_number] = data;
+    robots_[drone_number - 1] = data;
 }
 
 void ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
 {
   if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
     this->map_ = data;  // Asigna el primer mapa recibido a map_
-    this->map_->data;   // Usa map_ para acceder a los datos si es necesario
     checkPathsBetweenWaypoints();
   }
 }
@@ -94,7 +93,8 @@ double
 ReynoldRulesNode::get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2){
   auto x = pos1.x - pos2.x;
   auto y = pos1.y - pos2.y;
-  return sqrt(x * x + y * y);
+  auto z = pos1.z - pos2.z;
+  return sqrt(x * x + y * y + z * z);
 }
 
 geometry_msgs::msg::Vector3
@@ -187,11 +187,6 @@ bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::
   int startJ = static_cast<int>((start.first - this->map_->info.origin.position.x) / this->map_->info.resolution);
   int endI = static_cast<int>((end.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
   int endJ = static_cast<int>((end.first - this->map_->info.origin.position.x) / this->map_->info.resolution);
-
-  RCLCPP_WARN(this->get_logger(), "startI %d).", startI);
-  RCLCPP_WARN(this->get_logger(), "startJ %d).", startJ);
-  RCLCPP_WARN(this->get_logger(), "endI %d).", endI);
-  RCLCPP_WARN(this->get_logger(), "endJ %d).", endJ);
 
   int deltaI = abs(endI - startI);
   int deltaJ = abs(endJ - startJ);
@@ -372,7 +367,6 @@ ReynoldRulesNode::nav_2_point_rule()
   }
 
   // Calcular los vectores de navegación para los robots hacia el waypoint actual del camino
-  std::vector<geometry_msgs::msg::Vector3> path_;
   ArrayVector3d nav_2_point_vectors;
   for (const auto& robot : this->robots_) {
     geometry_msgs::msg::Vector3 vec = vector_2_points(robot->pose.pose.position, this->path_.front());

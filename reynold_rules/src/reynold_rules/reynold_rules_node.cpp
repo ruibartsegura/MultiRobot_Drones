@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <cmath>
 #include <vector>
 
 #include "geometry_msgs/msg/point.hpp"
@@ -630,12 +631,51 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control_set
 
 std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control()
 {
+	std::vector<geometry_msgs::msg::Point> points;
+
 	switch (formation_type_) {
-	case LINE: break;
+	case LINE:
+		float dist = side_length_ / NUMBER_DRONES;
 
-	case TRIANGLE: break;
+    // (0,0); (d,0); (2d,0); (3d,0)...
+		for (int i = 0; i < NUMBER_DRONES; i++) {
+			geometry_msgs::msg::Point point;
 
-	case SQUARE: break;
+			point.x = dist * i;
+			point.y = 0;
+			points.push_back(point);
+		}
+
+		break;
+
+	case TRIANGLE:
+		geometry_msgs::msg::Point point1, point2, point3, point4;
+
+		//(0,0); (0,l); (l/2, lcos(pi/6)); (l/2, l/2cos(pi/6))
+		point1.x = 0;
+		point1.y = 0;
+
+		point2.x = side_length_;
+		point2.y = 0;
+
+		point3.x = side_length_ / 2;
+		point3.y = side_length_ * std::cos(M_PI / 6);
+
+		point4.x = point3.x;
+		point4.y = point3.y / 2;
+
+		points = {point1, point2, point3, point4};
+		break;
+
+	case SQUARE:
+		geometry_msgs::msg::Point point1, point2, point3, point4;
+
+		//(0,0); (l,0); (l, l); (0, l)
+		point1.x = point1.y = point2.y = point4.x = 0;
+		point2.x = point3.x = point3.y = point4.y = side_length_;
+
+		points = {point1, point2, point3, point4};
+		break;
 
 	default: // NO FORMATION
 		break;

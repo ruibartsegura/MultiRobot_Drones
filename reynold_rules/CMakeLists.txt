@@ -17,7 +17,6 @@ find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(reynold_rules_interfaces REQUIRED)
-find_package(nav_msgs REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -27,7 +26,6 @@ set(dependencies
     geometry_msgs
     nav_msgs
     reynold_rules_interfaces
-    nav_msgs
 )
 
 # Using a library
@@ -37,15 +35,15 @@ add_library(${PROJECT_NAME} SHARED
 )
 ament_target_dependencies(${PROJECT_NAME} ${dependencies})
 
-add_executable(reynold_rules_class src/reynold_rules_class.cpp)
-ament_target_dependencies(reynold_rules_class ${dependencies})
-target_link_libraries(reynold_rules_class ${PROJECT_NAME})
+add_executable(reynold_rules_node src/reynold_rules_main.cpp)
+ament_target_dependencies(reynold_rules_node ${dependencies})
+target_link_libraries(reynold_rules_node ${PROJECT_NAME})
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   ${PROJECT_NAME}
-  reynold_rules_class
+  reynold_rules_node
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION lib/${PROJECT_NAME}

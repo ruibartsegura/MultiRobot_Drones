@@ -70,7 +70,8 @@ ReynoldRulesNode::ReynoldRulesNode()
     500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
 }
 
-void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
+void
+ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 {
     std::string number = data->child_frame_id.substr(std::strlen("cf_"));
 
@@ -80,11 +81,11 @@ void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr da
     robots_[drone_number - 1] = data;
 }
 
-void ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
+void
+ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
 {
   if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
     this->map_ = data;  // Asigna el primer mapa recibido a map_
-    checkPathsBetweenWaypoints();
   }
 }
 
@@ -138,20 +139,20 @@ ReynoldRulesNode::calc_vector(geometry_msgs::msg::Point position, int num)
   return repulsive_vector;
 }
 
-ArrayVector3d
+std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::separation_rule()
 {
-  ArrayVector3d separation_vectors;
+  std::vector<geometry_msgs::msg::Vector3> separation_vectors;
   declare_parameter<int>("view_range", 0.3);
   get_parameter("view_range", view_range_);
 
   for (int i = 0; i < NUMBER_DRONES; i++) {
     geometry_msgs::msg::Vector3 vec = calc_vector(this->robots_[i]->pose.pose.position, i);
-    separation_vectors.vectors.push_back(vec); // Agregar al vector del mensaje
+    separation_vectors.push_back(vec); // Agregar al vector del mensaje
   }
 }
 
-std::vector<float>
+std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::aligment_rule()
 {
   while (true){
@@ -159,14 +160,15 @@ ReynoldRulesNode::aligment_rule()
   }
 }
 
-std::vector<float>
+std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::cohesion_rule()
 {
   void();
 }
 
 // Find the neighbors of a waypoint
-std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findNeighbors(
+std::vector<geometry_msgs::msg::Point>
+ReynoldRulesNode::findNeighbors(
   const std::vector<geometry_msgs::msg::Point>& waypoints, 
   const geometry_msgs::msg::Point& currentWp, int step)
 {
@@ -181,7 +183,8 @@ std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findNeighbors(
 }
 
 // Check if between waypoints there is no obstacle
-bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end) {
+bool
+ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end) {
   if (!this->map_) return false;
 
   int startI = static_cast<int>((start.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
@@ -225,11 +228,11 @@ bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::
       currentJ += signJ;
     }
   }
-
   return true;
 }
 
-std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findPathThroughWaypoints(
+std::vector<geometry_msgs::msg::Point>
+ReynoldRulesNode::findPathThroughWaypoints(
     const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target)
 {
   using Position2D = std::pair<int, int>;
@@ -299,11 +302,10 @@ ReynoldRulesNode::vector_2_points(
       vector.x *= factor;
       vector.y *= factor;
   }
-
   return vector;
 }
 
-ArrayVector3d
+std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::nav_2_point_rule()
 {
   // Verificar si hay un nuevo punto objetivo
@@ -368,10 +370,10 @@ ReynoldRulesNode::nav_2_point_rule()
   }
 
   // Calcular los vectores de navegación para los robots hacia el waypoint actual del camino
-  ArrayVector3d nav_2_point_vectors;
+  std::vector<geometry_msgs::msg::Vector3> nav_2_point_vectors;
   for (const auto& robot : this->robots_) {
     geometry_msgs::msg::Vector3 vec = vector_2_points(robot->pose.pose.position, this->path_.front());
-    nav_2_point_vectors.vectors.push_back(vec);
+    nav_2_point_vectors.push_back(vec);
   }
 
   // Actualizar el punto objetivo anterior
@@ -381,7 +383,7 @@ ReynoldRulesNode::nav_2_point_rule()
   return nav_2_point_vectors;
 }
 
-ArrayVector3d
+std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::avoidance_rule()
 {
   void();
@@ -392,23 +394,6 @@ ReynoldRulesNode::control_cycle()
 {
   //std::cout << "Map" << this->map_ << std::endl;
   return;
-}
-
-void ReynoldRulesNode::checkPathsBetweenWaypoints() {
-  for (const auto& wp : waypoints_) {
-    auto neighbors = findNeighbors(waypoints_, wp);
-    for (const auto& neighbor : neighbors) {
-      auto start = std::make_pair(wp.x, wp.y);
-      auto end = std::make_pair(neighbor.x, neighbor.y);
-      if (isPathClear(start, end)) {
-        RCLCPP_INFO(this->get_logger(), "Free way between (%f, %f) and (%f, %f).",
-                    start.first, start.second, end.first, end.second);
-      } else {
-        RCLCPP_WARN(this->get_logger(), "Obstacle between (%f, %f) and (%f, %f).",
-                    start.first, start.second, end.first, end.second);
-      }
-    }
-  }
 }
 
 }  //  namespace reynold_rules

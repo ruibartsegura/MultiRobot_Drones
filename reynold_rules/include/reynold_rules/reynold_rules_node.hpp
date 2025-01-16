@@ -17,17 +17,17 @@ namespace reynold_rules
 
 class ReynoldRulesNode : public rclcpp::Node
 {
-public:  
+public:
   RCLCPP_SMART_PTR_DEFINITIONS(ReynoldRulesNode)
   
   ReynoldRulesNode();
   void control_cycle();
 
-  std::vector<float> separation_rule();
-  std::vector<float> aligment_rule();
-  std::vector<float> cohesion_rule();
-  std::vector<float> nav_2_point_rule();
-  std::vector<float> avoidance_rule();
+  std::vector<geometry_msgs::msg::Vector3> separation_rule();
+  std::vector<geometry_msgs::msg::Vector3> aligment_rule();
+  std::vector<geometry_msgs::msg::Vector3> cohesion_rule();
+  std::vector<geometry_msgs::msg::Vector3> nav_2_point_rule();
+  std::vector<geometry_msgs::msg::Vector3> avoidance_rule();
 
 private:
   static const int NUMBER_DRONES {4};
@@ -70,9 +70,6 @@ private:
 
   void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
-  
-
-  void checkPathsBetweenWaypoints();
 
   rclcpp::TimerBase::SharedPtr timer_;
 };

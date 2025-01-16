@@ -152,10 +152,7 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::cohesion_rule()
 }
 
 // Find the neighbors of a waypoint
-std::vector<geometry_msgs::msg::Point>
-ReynoldRulesNode::findNeighbors(
-  const std::vector<geometry_msgs::msg::Point>& waypoints, 
-  const geometry_msgs::msg::Point& currentWp, int step)
+std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findNeighbors(const std::vector<geometry_msgs::msg::Point>& waypoints, const geometry_msgs::msg::Point& currentWp, int step)
 {
   std::vector<geometry_msgs::msg::Point> neighbors;
   for (const auto& wp : waypoints) {
@@ -168,8 +165,7 @@ ReynoldRulesNode::findNeighbors(
 }
 
 // Check if between waypoints there is no obstacle
-bool
-ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end) {
+bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end) {
   if (!this->map_) return false;
 
   int startI = static_cast<int>((start.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
@@ -216,9 +212,7 @@ ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<
   return true;
 }
 
-std::vector<geometry_msgs::msg::Point>
-ReynoldRulesNode::findPathThroughWaypoints(
-    const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target)
+std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findPathThroughWaypoints(const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target)
 {
   using Position2D = std::pair<int, int>;
 
@@ -267,10 +261,7 @@ ReynoldRulesNode::findPathThroughWaypoints(
   return {};
 }
 
-geometry_msgs::msg::Vector3
-ReynoldRulesNode::vector_2_points(
-  const geometry_msgs::msg::Point point1,
-  const geometry_msgs::msg::Point point2)
+geometry_msgs::msg::Vector3 ReynoldRulesNode::vector_2_points(const geometry_msgs::msg::Point point1, const geometry_msgs::msg::Point point2)
 {
   geometry_msgs::msg::Vector3 vector;
 
@@ -372,8 +363,7 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()
   void();
 }
 
-void
-ReynoldRulesNode::control_cycle()
+void ReynoldRulesNode::control_cycle()
 {
   return;
 }

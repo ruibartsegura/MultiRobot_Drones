@@ -3,7 +3,6 @@
 
 #include "std_msgs/msg/int32.hpp"
 #include "reynold_rules/reynold_rules_node.hpp"
-#include "reynold_rules_interfaces/msg/vector_array.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/point.hpp"
@@ -39,32 +38,15 @@ ReynoldRulesNode::ReynoldRulesNode()
       robots_.resize(NUMBER_DRONES);  // Redimensiona si es necesario
   }
 
-  drones_sub1_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_1/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
-  drones_sub2_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_2/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
-  drones_sub3_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_3/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
-  drones_sub4_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_4/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
+  for (int n = 1; n <= NUMBER_DRONES; n++) {
+    std::string odom_topic = "/cf_" + std::to_string(n) + "/odom";
+    std::string vel_topic = "/cf_" + std::to_string(n) + "/cmd_vel";
 
-  map_sub_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
-      "/map", 
-      10,
-      std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
-  );
+    publishers_.push_back(create_publisher<geometry_msgs::msg::Twist>(vel_topic, 10));
+    subscribers_.push_back(create_subscription<nav_msgs::msg::Odometry>(
+      odom_topic, 10, std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
+    ));
+  }
 
   timer_ = create_wall_timer(
     500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
@@ -98,7 +80,7 @@ ReynoldRulesNode::get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::ms
 }
 
 geometry_msgs::msg::Vector3
-ReynoldRulesNode::calc_vector(geometry_msgs::msg::Point position, int num)
+ReynoldRulesNode::calc_sep_vector(geometry_msgs::msg::Point position, int num)
 {
   geometry_msgs::msg::Vector3 repulsive_vector; //k is the cte of force
   double k = 0.01;
@@ -147,7 +129,7 @@ ReynoldRulesNode::separation_rule()
   get_parameter("view_range", view_range_);
 
   for (int i = 0; i < NUMBER_DRONES; i++) {
-    geometry_msgs::msg::Vector3 vec = calc_vector(this->robots_[i]->pose.pose.position, i);
+    geometry_msgs::msg::Vector3 vec = calc_sep_vector(this->robots_[i]->pose.pose.position, i);
     separation_vectors.push_back(vec); // Agregar al vector del mensaje
   }
 }
@@ -392,7 +374,6 @@ ReynoldRulesNode::avoidance_rule()
 void
 ReynoldRulesNode::control_cycle()
 {
-  //std::cout << "Map" << this->map_ << std::endl;
   return;
 }
 

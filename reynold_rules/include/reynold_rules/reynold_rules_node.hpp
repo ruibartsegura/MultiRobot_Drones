@@ -2,7 +2,6 @@
 #define REYNOLD_RULES__REYNOLDRULESNODE_HPP_
 
 #include "rclcpp/rclcpp.hpp"
-#include "reynold_rules_interfaces/msg/vector_array.hpp"
 #include "nav_msgs/msg/odometry.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/point.hpp"
@@ -75,11 +74,8 @@ private:
   // Subscribers
   void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
 
-  // void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
+  void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
   rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
-  
-
-  void checkPathsBetweenWaypoints();
 
   rclcpp::TimerBase::SharedPtr timer_;
 };

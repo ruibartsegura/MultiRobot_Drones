@@ -17,19 +17,21 @@ def generate_launch_description():
         # prefix=['/usr/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose'],
         remappings=[]
     )
-
-    # Ruta al archivo .sh
-    startup_script = os.path.expanduser('~/CrazySim/ros2_ws/src/mrs_crazyflies/startup/start.sh')
-
-    # Proceso para ejecutar el script .sh
-    startup_process = ExecuteProcess(
-        cmd=['/bin/bash', startup_script],
+    
+    takeoff_service_call = ExecuteProcess(
+        cmd=[
+            'ros2', 'service', 'call',
+            '/all/takeoff',
+            'crazyflie_interfaces/srv/Takeoff',
+            '{"group_mask": 0, "height": 0.5, "duration": {"sec": 5, "nanosec": 0}}'
+        ],
         output='screen'
     )
 
+
     # Crear LaunchDescription y agregar las acciones
     ld = LaunchDescription()
-    ld.add_action(reynold_cmd)      # Agregar el nodo Reynold
-    ld.add_action(startup_process)  # Agregar el script .sh
+    ld.add_action(reynold_cmd)
+    ld.add_action(takeoff_service_call)
 
     return ld

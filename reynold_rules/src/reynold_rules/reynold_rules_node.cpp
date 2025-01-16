@@ -72,9 +72,10 @@ void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr da
 void
 ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
 {
-  if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
-    this->map_ = data;  // Asigna el primer mapa recibido a map_
-  }
+  // if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
+  this->map_ = data;  // Asigna el primer mapa recibido a map_
+  checkPathsBetweenWaypoints();
+  // }
 }
 
 double
@@ -366,6 +367,23 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()
 void ReynoldRulesNode::control_cycle()
 {
   return;
+}
+
+void ReynoldRulesNode::checkPathsBetweenWaypoints() {
+  for (const auto& wp : waypoints_) {
+    auto neighbors = findNeighbors(waypoints_, wp);
+    for (const auto& neighbor : neighbors) {
+      auto start = std::make_pair(wp.x, wp.y);
+      auto end = std::make_pair(neighbor.x, neighbor.y);
+      if (isPathClear(start, end)) {
+        RCLCPP_INFO(this->get_logger(), "Free way between (%f, %f) and (%f, %f).",
+                    start.first, start.second, end.first, end.second);
+      } else {
+        RCLCPP_WARN(this->get_logger(), "Obstacle between (%f, %f) and (%f, %f).",
+                    start.first, start.second, end.first, end.second);
+      }
+    }
+  }
 }
 
 } //  namespace reynold_rules

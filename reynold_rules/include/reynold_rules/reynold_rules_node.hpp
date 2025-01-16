@@ -75,9 +75,11 @@ private:
 	// Subscribers
 	void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
 
-  void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
-  rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
-
+	void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
+	rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
+  	
+	void checkPathsBetweenWaypoints();
+	
 	rclcpp::TimerBase::SharedPtr timer_;
 };
 

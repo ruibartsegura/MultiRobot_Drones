@@ -3,6 +3,8 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "geometry_msgs/msg/twist.hpp"
+
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
@@ -33,6 +35,10 @@ private:
   static const int NUMBER_DRONES {4};
   double MAX_LIN_VEL {0.3};
   double DIST_THRESHOLD {0.3};
+
+  std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
+  std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> subscribers_;
+
   std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
 
   // Map

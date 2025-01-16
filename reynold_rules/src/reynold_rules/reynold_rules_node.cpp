@@ -11,36 +11,24 @@ namespace reynold_rules
 {
 
 ReynoldRulesNode::ReynoldRulesNode()
-: Node("publisher_node")
+: Node("reynold_rules_node")
 {
+  RCLCPP_INFO(get_logger(), "Initiating reynold rules node...");
+
   // Make sure the array of the odom for the drones is of the correct size
   if (robots_.size() <= NUMBER_DRONES) {
       robots_.resize(NUMBER_DRONES);  // Redimensiona si es necesario
   }
 
   for (int n = 1; n <= NUMBER_DRONES; n++) {
-    std::string topic_name = "/cf_" + std::to_string(n) + "/odom";
+    std::string odom_topic = "/cf_" + std::to_string(n) + "/odom";
+    std::string vel_topic = "/cf_" + std::to_string(n) + "/cmd_vel";
+
+    publishers_.push_back(create_publisher<geometry_msgs::msg::Twist>(vel_topic, 10));
+    subscribers_.push_back(create_subscription<nav_msgs::msg::Odometry>(
+      odom_topic, 10, std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
+    ));
   }
-  drones_sub1_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_1/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
-  drones_sub2_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_2/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
-  drones_sub3_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_3/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
-  drones_sub4_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/cf_4/odom", 
-      10,
-      std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)
-  );
 
   // map_sub_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
   //    "/map", 
@@ -60,15 +48,13 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
     // Asignación de SharedPtr en el vector
     int drone_number = std::stoi(number);
 
-    robots_[drone_number] = data;
+    robots_[drone_number - 1] = data;
 }
 
 void
 ReynoldRulesNode::control_cycle()
 {
-  while (true){
-    continue;
-  }
+  return;
 }
 
 std::vector<geometry_msgs::msg::Vector3>

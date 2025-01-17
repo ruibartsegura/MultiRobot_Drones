@@ -38,6 +38,7 @@ ament_target_dependencies(reynold_rules_node ${dependencies})
 target_link_libraries(reynold_rules_node ${PROJECT_NAME})
 
 install(DIRECTORY launch DESTINATION share/${PROJECT_NAME})
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 install(TARGETS
   ${PROJECT_NAME}

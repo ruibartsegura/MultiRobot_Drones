@@ -15,7 +15,8 @@ def generate_launch_description():
         executable='reynold_rules_node',
         output='screen',
         # prefix=['/usr/bin/valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --verbose'],
-        remappings=[]
+        remappings=[],
+        parameters=[param_file]
     )
     
     takeoff_service_call = ExecuteProcess(

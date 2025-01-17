@@ -1,4 +1,4 @@
-reynold_rules:
+/publisher_node:
   ros__parameters:
     use_sim_time: true
     NUMBER_DRONES: 4

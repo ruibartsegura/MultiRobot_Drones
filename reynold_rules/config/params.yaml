@@ -1,5 +1,14 @@
 reynold_rules:
   ros__parameters:
-    use_sim_time: false
-    SPEED_LINEAR: 0.2
-    SPEED_ANGULAR: 0.4
+    use_sim_time: true
+    NUMBER_DRONES: 4
+    MIN_LIN_VEL: 0.2
+    MIN_LIN_VEL: 0.4
+    DIST_THRESHOLD: 0.4
+    separation_weight_: 0.4
+    cohesion_weight_: 0.4
+    alignment_weight_: 0.4
+    nav2point_weight_: 0.4
+    obstacle_avoidance_weight_: 0.4
+    last_linear_vel_: 0.4
+    MAX_VEL_DIFF_FACTOR: 0.4

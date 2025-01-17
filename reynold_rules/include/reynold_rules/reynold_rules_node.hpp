@@ -8,6 +8,7 @@
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
 #include "geometry_msgs/msg/twist.hpp"
+#include <geometry_msgs/msg/quaternion.hpp>
 
 #include <vector>
 #include <queue>
@@ -30,9 +31,18 @@ public:
 	std::vector<geometry_msgs::msg::Vector3> avoidance_rule();
 
 private:
+	bool READY = false;
+
 	static const int NUMBER_DRONES{4};
-	double MAX_LIN_VEL{0.3};
-	double DIST_THRESHOLD{0.3};
+	double MAX_LIN_VEL{1};
+	double MIN_LIN_VEL{0.0};
+	double DIST_THRESHOLD{1};
+
+	double separation_weight_{1.0};
+	double cohesion_weight_{0.0};
+	double alignment_weight_{0.0};
+	double nav2point_weight_{0.0};
+	double obstacle_avoidance_weight_{0.0};
 
 	std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
 	std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> subscribers_;
@@ -43,7 +53,7 @@ private:
 	nav_msgs::msg::OccupancyGrid::SharedPtr map_;
 
 	// Separation
-	int view_range_;
+	double view_range_{0.6};
 	double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
 	geometry_msgs::msg::Vector3 calc_sep_vector(geometry_msgs::msg::Point position, int num);
 
@@ -71,6 +81,16 @@ private:
 	geometry_msgs::msg::Point prev_point;
 	std::vector<geometry_msgs::msg::Point> waypoints_;
 	std::vector<geometry_msgs::msg::Point> path_;
+
+	// Control Cycle
+	double wrap_2_pi(double angle);
+    double calc_length(const geometry_msgs::msg::Vector3 &vector);
+    geometry_msgs::msg::Twist vector2twist(const geometry_msgs::msg::Vector3 &vector, const geometry_msgs::msg::Quaternion &current_orientation);
+
+	double angular_mult_{2.0};
+	double linear_mult_{1.0};
+	double last_linear_vel_ = 0;
+	double MAX_VEL_DIFF_FACTOR {0.2};
 
 	// Subscribers
 	void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);

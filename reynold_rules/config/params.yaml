@@ -5,6 +5,8 @@
     MIN_LIN_VEL: 0.2
     MIN_LIN_VEL: 0.4
     DIST_THRESHOLD: 0.4
+    navigation_method: "Rendezvous"
+    topology: "0,0,0,1;0,0,1,0;0,1,0,0;1,0,0,0"
     separation_weight_: 0.4
     cohesion_weight_: 0.4
     alignment_weight_: 0.4
@@ -12,3 +14,4 @@
     obstacle_avoidance_weight_: 0.4
     last_linear_vel_: 0.4
     MAX_VEL_DIFF_FACTOR: 0.4
+

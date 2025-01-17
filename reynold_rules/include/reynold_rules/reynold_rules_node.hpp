@@ -7,15 +7,20 @@
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
-#include "geometry_msgs/msg/twist.hpp"
 #include <geometry_msgs/msg/quaternion.hpp>
 
-#include <vector>
+#include <optional>
 #include <queue>
 #include <set>
-
+#include <vector>
 
 namespace reynold_rules {
+
+/// determines the source for the navigation rule
+enum class NavigationMethod {
+	RosParam,  // fixed point passed via rosparam
+	Rendezvous, // update point via rendezvous protocol
+};
 
 class ReynoldRulesNode : public rclcpp::Node {
 public:
@@ -29,6 +34,9 @@ public:
 	std::vector<geometry_msgs::msg::Vector3> cohesion_rule();
 	std::vector<geometry_msgs::msg::Vector3> nav_2_point_rule();
 	std::vector<geometry_msgs::msg::Vector3> avoidance_rule();
+
+	/// @brief execute the rendezvous_protocol and update each robot's path in paths_
+	void rendezvous_protocol();
 
 private:
 	bool READY = false;
@@ -65,6 +73,7 @@ private:
 	geometry_msgs::msg::Vector3 calc_cohesion_vector(geometry_msgs::msg::Point robot_pos);
 
 	// Nav_2_Point
+	void recalculatePath();
 	std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(
 	        const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target);
 
@@ -75,12 +84,15 @@ private:
 	bool isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end);
 
 	geometry_msgs::msg::Vector3 vector_2_points(geometry_msgs::msg::Point point1,
-	                                            geometry_msgs::msg::Point point2);
+	                                            geometry_msgs::msg::Point point2,
+	                                            std::optional<double> max_length = std::nullopt);
 
+	NavigationMethod navigationMethod_{NavigationMethod::RosParam};
 	geometry_msgs::msg::Point target_point;
 	geometry_msgs::msg::Point prev_point;
 	std::vector<geometry_msgs::msg::Point> waypoints_;
 	std::vector<geometry_msgs::msg::Point> path_;
+	std::vector<std::vector<geometry_msgs::msg::Point>> paths_;
 
 	// Control Cycle
 	double wrap_2_pi(double angle);
@@ -91,6 +103,8 @@ private:
 	double linear_mult_{1.0};
 	double last_linear_vel_ = 0;
 	double MAX_VEL_DIFF_FACTOR {0.2};
+
+	std::vector<std::vector<double>> topology_;
 
 	// Subscribers
 	void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);

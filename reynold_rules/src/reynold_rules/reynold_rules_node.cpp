@@ -1,24 +1,80 @@
 #include "reynold_rules/reynold_rules_node.hpp"
 
+#include <algorithm>
+#include <iterator>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 #include <vector>
 
-#include "rclcpp/rclcpp.hpp"
-#include "std_msgs/msg/int32.hpp"
-#include "reynold_rules/reynold_rules_node.hpp"
-#include "nav_msgs/msg/odometry.hpp"
-#include "nav_msgs/msg/occupancy_grid.hpp"
 #include "geometry_msgs/msg/point.hpp"
 #include "geometry_msgs/msg/vector3.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "rclcpp/rclcpp.hpp"
+#include "reynold_rules/reynold_rules_node.hpp"
+#include "std_msgs/msg/int32.hpp"
 #include <geometry_msgs/msg/quaternion.hpp>
 
 #include <iostream>
-#include <string>
-#include <vector>
 #include <queue>
 #include <set>
+#include <string>
+#include <vector>
 
 using namespace std::chrono_literals;
 using std::placeholders::_1;
+
+using geometry_msgs::msg::Point;
+using geometry_msgs::msg::Vector3;
+
+namespace {
+[[nodiscard]] std::vector<std::vector<double>> parseTopology(const std::string& s)
+{
+	if (s.empty()) {
+		throw std::runtime_error{"Cannot parse empty string."};
+	}
+
+	std::vector<std::vector<double>> topology;
+	std::stringstream outerStream(s);
+	while (outerStream.good()) {
+		std::string line;
+		std::getline(outerStream, line, ';');
+
+		std::vector<double> v;
+		std::stringstream ss(line);
+		for (double i; ss >> i;) {
+			v.push_back(i);
+			if (ss.peek() == ',') {
+				ss.ignore();
+			}
+		}
+
+		topology.push_back(v);
+		if (outerStream.peek() == ';') {
+			outerStream.ignore();
+		}
+	}
+
+	return topology;
+}
+
+[[nodiscard]] Point add(Point p, const Vector3& v)
+{
+	p.x += v.x;
+	p.y += v.y;
+	p.z += v.z;
+	return p;
+}
+
+[[nodiscard]] Vector3 mul(double scalar, Vector3 v)
+{
+	v.x *= scalar;
+	v.y *= scalar;
+	v.z *= scalar;
+	return v;
+}
+} // namespace
 
 namespace reynold_rules {
 
@@ -38,6 +94,25 @@ ReynoldRulesNode::ReynoldRulesNode()
         waypoints_.push_back(wp);
     }
   }
+
+	std::string navigationMethod;
+	declare_parameter("navigation_method", navigationMethod);
+	get_parameter("navigation_method", navigationMethod);
+	if (navigationMethod == "Rendezvous") {
+		navigationMethod_ = NavigationMethod::Rendezvous;
+
+		std::string topology;
+		declare_parameter("topology", topology);
+		get_parameter("topology", topology);
+		try {
+			topology_ = parseTopology(topology);
+			RCLCPP_INFO(get_logger(), "Parsed topology: %s", topology.c_str());
+		} catch (const std::exception& e) {
+			// fill topology with zeros
+			topology_ = {NUMBER_DRONES, std::vector<double>(NUMBER_DRONES)};
+			RCLCPP_ERROR(get_logger(), "Communication disabled, parsing failed: %s", e.what());
+		}
+	}
 
 	// Make sure the array of the odom for the drones is of the correct size
 	if (robots_.size() <= NUMBER_DRONES) {
@@ -230,152 +305,192 @@ bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::
     }
   }
   return true;
+
 }
 
-std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findPathThroughWaypoints(const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target)
+void ReynoldRulesNode::recalculatePath()
 {
-  using Position2D = std::pair<int, int>;
+	// Calcular el punto de inicio como la posición promedio de los robots
+	geometry_msgs::msg::Point start;
+	for (const auto& robot : this->robots_) {
+		start.x += robot->pose.pose.position.x;
+		start.y += robot->pose.pose.position.y;
+	}
+	start.x /= this->NUMBER_DRONES;
+	start.y /= this->NUMBER_DRONES;
 
-  Position2D startPos = {static_cast<int>(start.x), static_cast<int>(start.y)};
-  Position2D targetPos = {static_cast<int>(target.x), static_cast<int>(target.y)};
+	// Encontrar el waypoint más cercano al inicio y al objetivo
+	double dist = -1; // Inicializar con el valor máximo de double
+	geometry_msgs::msg::Point closer_2_start;
+	for (const auto& wp : this->waypoints_) {              // Iterar sobre la lista de waypoints
+		double current_dist = get_distance(start, wp); // Calcular la distancia actual
+		if (current_dist < dist || dist < 0) {
+			dist           = current_dist;
+			closer_2_start = wp; // Actualizar el punto más cercano
+		}
+	}
 
-  std::queue<std::pair<Position2D, std::vector<Position2D>>> queue;
-  std::set<Position2D> visited;
-  std::map<Position2D, geometry_msgs::msg::Point> waypointMap;
-  std::vector<geometry_msgs::msg::Point> path;
+	dist = -1; // Restart the calue of dist
+	geometry_msgs::msg::Point closer_2_target;
+	for (const auto& wp : this->waypoints_) {              // Iterar sobre la lista de waypoints
+		double current_dist = get_distance(start, wp); // Calcular la distancia actual
+		if (current_dist < dist || dist < 0) {
+			dist            = current_dist;
+			closer_2_target = wp; // Actualizar el punto más cercano
+		}
+	}
 
-  for (const auto& wp : this->waypoints_) {
-    waypointMap[{static_cast<int>(wp.x), static_cast<int>(wp.y)}] = wp;
-  }
+	// Encontrar el camino a través de los waypoints
+	this->path_ = findPathThroughWaypoints(closer_2_start, closer_2_target);
+	this->path_.push_back(this->target_point); // Añadir el punto objetivo al camino
 
-  queue.push({startPos, {startPos}});
-  visited.insert(startPos);
-
-  while (!queue.empty()) {
-    auto [currentPos, path] = queue.front();
-    queue.pop();
-
-    if (currentPos == targetPos) {
-      std::vector<geometry_msgs::msg::Point> result;
-      for (const auto& pos : path) {
-        result.push_back(waypointMap[pos]);
-      }
-      return result;
-    }
-
-    const auto& currentWp = waypointMap[currentPos];
-    auto neighbors = findNeighbors(waypoints_, currentWp);
-
-    for (const auto& neighbor : neighbors) {
-      Position2D neighborPos = {static_cast<int>(neighbor.x), static_cast<int>(neighbor.y)};
-      if (visited.find(neighborPos) == visited.end() && isPathClear(currentPos, neighborPos)) {
-        visited.insert(neighborPos);
-        auto newPath = path;
-        newPath.push_back(neighborPos);
-        queue.push({neighborPos, newPath});
-      }
-    }
-  }
-
-  RCLCPP_WARN(this->get_logger(), "No available route found..");
-  return {};
+	if (!this->path_.empty()) {
+		RCLCPP_INFO(this->get_logger(), "Ruta encontrada:");
+		for (const auto& p : this->path_) {
+			RCLCPP_INFO(this->get_logger(), "(%f, %f)", p.x, p.y);
+		}
+	} else {
+		RCLCPP_WARN(this->get_logger(), "No se encontró una ruta disponible.");
+	}
 }
 
-geometry_msgs::msg::Vector3 ReynoldRulesNode::vector_2_points(const geometry_msgs::msg::Point point1, const geometry_msgs::msg::Point point2)
+std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findPathThroughWaypoints(
+        const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target)
 {
-  geometry_msgs::msg::Vector3 vector;
+	using Position2D = std::pair<int, int>;
 
-  // Calcular las componentes del vector
-  vector.x = point2.x - point1.x;
-  vector.y = point2.y - point1.y;
+	Position2D startPos  = {static_cast<int>(start.x), static_cast<int>(start.y)};
+	Position2D targetPos = {static_cast<int>(target.x), static_cast<int>(target.y)};
 
-  // Calcular la longitud del vector
-  double vector_length = std::sqrt(vector.x * vector.x + vector.y * vector.y);
+	std::queue<std::pair<Position2D, std::vector<Position2D>>> queue;
+	std::set<Position2D> visited;
+	std::map<Position2D, geometry_msgs::msg::Point> waypointMap;
+	std::vector<geometry_msgs::msg::Point> path;
 
-  // Limitar la velocidad lineal máxima
-  if (vector_length > this->MAX_LIN_VEL) {
-      double factor = this->MAX_LIN_VEL / vector_length;
-      vector.x *= factor;
-      vector.y *= factor;
-  }
-  return vector;
+	for (const auto& wp : this->waypoints_) {
+		waypointMap[{static_cast<int>(wp.x), static_cast<int>(wp.y)}] = wp;
+	}
+
+	queue.push({startPos, {startPos}});
+	visited.insert(startPos);
+
+	while (!queue.empty()) {
+		auto [currentPos, path] = queue.front();
+		queue.pop();
+
+		if (currentPos == targetPos) {
+			std::vector<geometry_msgs::msg::Point> result;
+			for (const auto& pos : path) {
+				result.push_back(waypointMap[pos]);
+			}
+			return result;
+		}
+
+		const auto& currentWp = waypointMap[currentPos];
+		auto neighbors        = findNeighbors(waypoints_, currentWp);
+
+		for (const auto& neighbor : neighbors) {
+			Position2D neighborPos = {static_cast<int>(neighbor.x),
+			                          static_cast<int>(neighbor.y)};
+			if (visited.find(neighborPos) == visited.end() &&
+			    isPathClear(currentPos, neighborPos)) {
+				visited.insert(neighborPos);
+				auto newPath = path;
+				newPath.push_back(neighborPos);
+				queue.push({neighborPos, newPath});
+			}
+		}
+	}
+
+	RCLCPP_WARN(this->get_logger(), "No available route found..");
+	return {};
+}
+
+geometry_msgs::msg::Vector3 ReynoldRulesNode::vector_2_points(const geometry_msgs::msg::Point point1,
+                                                              const geometry_msgs::msg::Point point2,
+                                                              std::optional<double> max_length)
+{
+	geometry_msgs::msg::Vector3 vector;
+
+	// Calcular las componentes del vector
+	vector.x = point2.x - point1.x;
+	vector.y = point2.y - point1.y;
+
+	if (max_length) {
+		// Calcular la longitud del vector
+		const double vector_length = std::sqrt(vector.x * vector.x + vector.y * vector.y);
+
+		// Limitar la velocidad lineal máxima
+		if (vector_length > max_length.value()) {
+			double factor = max_length.value() / vector_length;
+			vector.x *= factor;
+			vector.y *= factor;
+		}
+	}
+	return vector;
 }
 
 std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::nav_2_point_rule()
 {
-  // Verificar si hay un nuevo punto objetivo
-  if (this->target_point.x != this->prev_point.x || this->target_point.y != this->prev_point.y) {
-    // Calcular el punto de inicio como la posición promedio de los robots
-    geometry_msgs::msg::Point start;
-    for (const auto& robot : this->robots_) {
-      start.x += robot->pose.pose.position.x;
-      start.y += robot->pose.pose.position.y;
-    }
-    start.x /= this->NUMBER_DRONES;
-    start.y /= this->NUMBER_DRONES;
+	std::vector<geometry_msgs::msg::Vector3> nav_2_point_vectors;
 
-    // Encontrar el waypoint más cercano al inicio y al objetivo
-    double dist = -1; // Inicializar con el valor máximo de double
-    geometry_msgs::msg::Point closer_2_start;
-    for (const auto& wp : this->waypoints_) { // Iterar sobre la lista de waypoints
-      double current_dist = get_distance(start, wp); // Calcular la distancia actual
-      if (current_dist < dist || dist < 0) {
-          dist = current_dist;
-          closer_2_start = wp; // Actualizar el punto más cercano
-      }
-    }
-    
-    dist = -1; // Restart the calue of dist
-    geometry_msgs::msg::Point closer_2_target;
-    for (const auto& wp : this->waypoints_) { // Iterar sobre la lista de waypoints
-      double current_dist = get_distance(start, wp); // Calcular la distancia actual
-      if (current_dist < dist || dist < 0) {
-          dist = current_dist;
-          closer_2_target = wp; // Actualizar el punto más cercano
-      }
-    }
+	if (this->navigationMethod_ == NavigationMethod::RosParam) {
+		// Verificar si hay un nuevo punto objetivo
+		if (this->target_point.x != this->prev_point.x ||
+		    this->target_point.y != this->prev_point.y) {
+			recalculatePath();
+			this->prev_point = this->target_point;
+		}
 
-    // Encontrar el camino a través de los waypoints
-    this->path_ = findPathThroughWaypoints(closer_2_start, closer_2_target);
-    this->path_.push_back(this->target_point); // Añadir el punto objetivo al camino
+		RCLCPP_INFO(get_logger(), "nav_2_point_rule: 1");
+		// Verificar si el enjambre ha llegado al waypoint actual
+		geometry_msgs::msg::Point average_position;
+		for (const auto& robot : this->robots_) {
+			average_position.x += robot->pose.pose.position.x;
+			average_position.y += robot->pose.pose.position.y;
+		}
+		average_position.x /= this->NUMBER_DRONES;
+		average_position.y /= this->NUMBER_DRONES;
 
-    if (!this->path_.empty()) {
-      RCLCPP_INFO(this->get_logger(), "Ruta encontrada:");
-      for (const auto& p : this->path_) {
-          RCLCPP_INFO(this->get_logger(), "(%f, %f)", p.x, p.y);
-      }
-    } else {
-      RCLCPP_WARN(this->get_logger(), "No se encontró una ruta disponible.");
-    }
-  }
+		RCLCPP_INFO(get_logger(), "nav_2_point_rule: 2");
+		if (get_distance(average_position, this->path_.front()) < this->DIST_THRESHOLD) {
+			if (this->path_.front() != this->target_point) {
+				this->path_.erase(this->path_.begin()); // Eliminar waypoint del camino
+			}
+		}
 
-  // Verificar si el enjambre ha llegado al waypoint actual
-  geometry_msgs::msg::Point average_position;
-  for (const auto& robot : this->robots_) {
-    average_position.x += robot->pose.pose.position.x;
-    average_position.y += robot->pose.pose.position.y;
-  }
-  average_position.x /= this->NUMBER_DRONES;
-  average_position.y /= this->NUMBER_DRONES;
+		RCLCPP_INFO(get_logger(), "nav_2_point_rule: 3");
+		// Calcular los vectores de navegación para los robots hacia el waypoint actual del
+		// camino
+		for (const auto& robot : this->robots_) {
+			const auto vec = vector_2_points(robot->pose.pose.position,
+			                                 this->path_.front(),
+			                                 this->MAX_LIN_VEL);
+			nav_2_point_vectors.push_back(vec);
+		}
+		RCLCPP_INFO(get_logger(), "end");
+	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
+		rendezvous_protocol();
 
-  if (get_distance(average_position, this->path_.front()) < this->DIST_THRESHOLD) {
-    if (this->path_.front() != this->target_point) {
-      this->path_.erase(this->path_.begin()); // Eliminar waypoint del camino
-    }
-  }
+		if (this->paths_.size() != this->robots_.size()) {
+			throw std::runtime_error{"robots_ and paths_ sizes don't match"};
+		}
 
-  // Calcular los vectores de navegación para los robots hacia el waypoint actual del camino
-  std::vector<geometry_msgs::msg::Vector3> nav_2_point_vectors;
-  for (const auto& robot : this->robots_) {
-    geometry_msgs::msg::Vector3 vec = vector_2_points(robot->pose.pose.position, this->path_.front());
-    nav_2_point_vectors.push_back(vec);
-  }
+		for (size_t i = 0; i < this->robots_.size(); i++) {
+			auto& path      = paths_[i];
+			const auto& pos = robots_[i]->pose.pose.position;
+			if ((path.size() > 1) &&
+			    (get_distance(pos, path.front()) < this->DIST_THRESHOLD)) {
+				path.erase(path.begin());
+			}
 
-  // Actualizar el punto objetivo anterior
-  this->prev_point = this->target_point;
+			auto vec = vector_2_points(pos, path.front(), this->MAX_LIN_VEL);
+			nav_2_point_vectors.push_back(vec);
+		}
+	}
 
-  // Publicar los vectores de navegación
-  return nav_2_point_vectors;
+	// Publicar los vectores de navegación
+	return nav_2_point_vectors;
 }
 
 std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()
@@ -384,82 +499,87 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()
 }
 
 geometry_msgs::msg::Twist ReynoldRulesNode::vector2twist(const geometry_msgs::msg::Vector3 &vector, const geometry_msgs::msg::Quaternion &current_orientation) {
-    geometry_msgs::msg::Twist twist;
+	geometry_msgs::msg::Twist twist;
 
-    double current_angle = 2 * std::atan2(current_orientation.z, current_orientation.w);
-    double error_angle = wrap_2_pi(std::atan2(vector.y, vector.x) - current_angle);
+	double current_angle = 2 * std::atan2(current_orientation.z, current_orientation.w);
+	double error_angle   = wrap_2_pi(std::atan2(vector.y, vector.x) - current_angle);
 
-    twist.angular.z = angular_mult_ * error_angle;
+	twist.angular.z = angular_mult_ * error_angle;
 
-    double linear_vel = (linear_mult_ * calc_length(vector) * std::exp(-std::abs(twist.angular.z)) + MIN_LIN_VEL);
-    twist.linear.x = std::min(linear_vel, MAX_LIN_VEL);
+	double linear_vel = (linear_mult_ * calc_length(vector) * std::exp(-std::abs(twist.angular.z)) +
+	                     MIN_LIN_VEL);
+	twist.linear.x = std::min(linear_vel, MAX_LIN_VEL);
 
-    double linear_vel_change = std::fabs(twist.linear.x - last_linear_vel_);
-    if (linear_vel_change > MAX_VEL_DIFF_FACTOR * last_linear_vel_) {
-        twist.linear.x = (twist.linear.x + 2 * last_linear_vel_) / 3.0;
-    }
+	double linear_vel_change = std::fabs(twist.linear.x - last_linear_vel_);
+	if (linear_vel_change > MAX_VEL_DIFF_FACTOR * last_linear_vel_) {
+		twist.linear.x = (twist.linear.x + 2 * last_linear_vel_) / 3.0;
+	}
 
-    last_linear_vel_ = twist.linear.x;
-    return twist;
+	last_linear_vel_ = twist.linear.x;
+	return twist;
 }
 
 void ReynoldRulesNode::control_cycle()
 {
-    if (READY) {
-        std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
-              separation_rule(),
-              // aligment_rule(),
-              // cohesion_rule(),
-              // nav_2_point_rule(),
-              // avoidance_rule()
-        };
+	if (READY) {
+		std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
+		        separation_rule(),
+		        // aligment_rule(),
+		        // cohesion_rule(),
+		        nav_2_point_rule(),
+		        // avoidance_rule()
+		};
 
-        std::vector<double> weights = {
-            separation_weight_,
-            // nav2point_weight_,
-            // obstacle_avoidance_weight_,
-            // cohesion_weight_,
-            // alignment_weight_
-        };
+		std::vector<double> weights = {
+		        separation_weight_, nav2point_weight_,
+		        // obstacle_avoidance_weight_,
+		        // cohesion_weight_,
+		        // alignment_weight_
+		};
 
-        for (size_t i = 0; i < NUMBER_DRONES; ++i) {
-            geometry_msgs::msg::Vector3 total_vector;
+		for (size_t i = 0; i < NUMBER_DRONES; ++i) {
+			geometry_msgs::msg::Vector3 total_vector;
 
-            for (size_t j = 0; j < rules.size(); ++j) {
-                geometry_msgs::msg::Vector3 new_vector;
-                new_vector.x = weights[j] * rules[j][i].x;
-                new_vector.y = weights[j] * rules[j][i].y;
-                new_vector.z = weights[j] * rules[j][i].z;
+			for (size_t j = 0; j < rules.size(); ++j) {
+				geometry_msgs::msg::Vector3 new_vector;
+				new_vector.x = weights[j] * rules[j][i].x;
+				new_vector.y = weights[j] * rules[j][i].y;
+				new_vector.z = weights[j] * rules[j][i].z;
 
-                total_vector.x += new_vector.x;
-                total_vector.y += new_vector.y;
-                total_vector.z += new_vector.z;
+				total_vector.x += new_vector.x;
+				total_vector.y += new_vector.y;
+				total_vector.z += new_vector.z;
 
-                if (calc_length(new_vector) > MAX_LIN_VEL) {
-                    break;
-                }
-            }
+				if (calc_length(new_vector) > MAX_LIN_VEL) {
+					break;
+				}
+			}
 
-            geometry_msgs::msg::Twist vel = vector2twist(total_vector, robots_[i]->pose.pose.orientation);
-            // Imprimir los valores de separation_vectors
-            std::cout << "VELOCITY " << i << ": x=" << vel.linear.x << ", y=" << vel.linear.y << ", z=" << vel.linear.z << std::endl;
-            
-            publishers_[i]->publish(vel);
-        }
-    }
-      
+			geometry_msgs::msg::Twist vel = vector2twist(total_vector,
+			                                             robots_[i]->pose.pose.orientation);
+			// Imprimir los valores de separation_vectors
+			std::cout << "VELOCITY " << i << ": x=" << vel.linear.x
+			          << ", y=" << vel.linear.y << ", z=" << vel.linear.z << std::endl;
+
+			publishers_[i]->publish(vel);
+		}
+	}
 }
 
 double ReynoldRulesNode::wrap_2_pi(double angle)
 {
-    while (angle > M_PI) angle -= 2.0 * M_PI;
-    while (angle < -M_PI) angle += 2.0 * M_PI;
-    return angle;
+	while (angle > M_PI) {
+		angle -= 2.0 * M_PI;
+	}
+	while (angle < -M_PI) {
+		angle += 2.0 * M_PI;
+	}
+	return angle;
 }
 
-double ReynoldRulesNode::calc_length(const geometry_msgs::msg::Vector3 &vector)
+double ReynoldRulesNode::calc_length(const geometry_msgs::msg::Vector3& vector)
 {
-    return std::sqrt(vector.x * vector.x + vector.y * vector.y);
+	return std::sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
 void ReynoldRulesNode::checkPathsBetweenWaypoints() {
@@ -477,6 +597,32 @@ void ReynoldRulesNode::checkPathsBetweenWaypoints() {
       }
     }
   }
+}
+
+void ReynoldRulesNode::rendezvous_protocol()
+{
+	// Implement a consensus-based rendezvous protocol. Goal of a rendezvous protocol is to
+	// gather the robots in a common position in space. Test the behavior for at least two fixed
+	// directed communication topologies for random initial positions of the robots.
+	this->paths_.clear();
+
+	for (size_t i = 0; i < robots_.size(); i++) {
+		geometry_msgs::msg::Point x{};
+		for (size_t j = 0; j < robots_.size(); j++) {
+			// implement the consensus equation
+			const auto a_ij = topology_.at(i).at(j);
+			const auto d    = vector_2_points(robots_[i]->pose.pose.position,
+                                                       robots_[j]->pose.pose.position);
+
+			// x += a_ij * d
+			x = add(x, mul(a_ij, d));
+		}
+
+		// update the robot's navigation to x
+		auto path = findPathThroughWaypoints(robots_[i]->pose.pose.position, x);
+		path.push_back(x);
+		this->paths_.emplace_back(path);
+	}
 }
 
 } //  namespace reynold_rules

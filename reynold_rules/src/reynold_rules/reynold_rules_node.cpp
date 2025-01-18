@@ -189,7 +189,7 @@ ReynoldRulesNode::ReynoldRulesNode()
 		ready_.resize(NUMBER_DRONES);
 	}
 
-	for (int i = 0; i <= NUMBER_DRONES; i++) {
+	for (int i = 0; i < NUMBER_DRONES; i++) {
 		std::string odom_topic = "/cf_" + std::to_string(i + 1) + "/odom";
 		std::string vel_topic  = "/cf_" + std::to_string(i + 1) + "/cmd_vel";
 
@@ -768,7 +768,7 @@ ReynoldRulesNode::control_cycle()
 	// Waits for all drones to be ready
 	for (int i = 0; i < NUMBER_DRONES; i++) {
 		if (ready_[i] == false) {
-			std::cout << "Waiting..." << std::endl;
+			RCLCPP_INFO(get_logger(), "Waiting for drone %d...\n", i + 1);
 			return;
 		}
 	}
@@ -777,18 +777,18 @@ ReynoldRulesNode::control_cycle()
 			// separation_rule(),
 			// aligment_rule(),
 			// cohesion_rule(),
-			//nav_2_point_rule(),
+			nav_2_point_rule(),
 			// avoidance_rule(),
-			//formation_control()
+			formation_control()
 	};
 
 	std::vector<double> weights = {
 			// separation_weight_,
-			//nav2point_weight_,
+			nav2point_weight_,
 			// obstacle_avoidance_weight_,
 			// cohesion_weight_,
 			// alignment_weight_
-			//formation_weight_
+			formation_weight_
 	};
 
 	for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); i++) {

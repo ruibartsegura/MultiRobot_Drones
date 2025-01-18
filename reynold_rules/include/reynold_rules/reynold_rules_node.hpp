@@ -48,7 +48,7 @@ private:
 	double MAX_LIN_VEL{1};
 	double MIN_LIN_VEL{0.0};
 	double DIST_THRESHOLD{1};
-	double HEIGHT{0.3};
+	double HEIGHT{0.2};
 
 	double separation_weight_{1.0};
 	double cohesion_weight_{0.0};

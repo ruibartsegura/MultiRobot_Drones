@@ -87,7 +87,18 @@ namespace {
 
 } // namespace
 
-namespace reynold_rules {
+namespace reynold_rules
+{
+
+using ArrayVector3d = reynold_rules_interfaces::msg::VectorArray;
+
+double
+compute_norm(const std::vector<double>& vec)
+{
+  double sum_of_squares = std::accumulate(vec.begin(), vec.end(), 0.0,
+    [](double sum, double val) { return sum + val * val; }); 
+  return sqrt(sum_of_squares);
+}
 
 ReynoldRulesNode::ReynoldRulesNode()
 : Node("reynold_rules_node"), map_(nullptr)
@@ -148,7 +159,20 @@ ReynoldRulesNode::ReynoldRulesNode()
 	   std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
 	);
 
+	checkPathsBetweenWaypoints();
+
+	// retrieve parameters
+	declare_parameter<int>("view_range", 0.3);
+	get_parameter("view_range", view_range_);
+
+	declare_parameter<int>("view_angle", 60);
+	get_parameter("view_angle", view_angle_);
+
+	declare_parameter<int>("view_split", 0);
+	get_parameter("view_split", view_split_);
+
 	timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+
 }
 
 void
@@ -242,15 +266,69 @@ ReynoldRulesNode::separation_rule()
 std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::aligment_rule()
 {
-	while (true) {
-		continue;
-	}
+  geometry_msgs::msg::Vector3 avg_velocity = calc_average_velocity();
+  ArrayVector3d alignment_vectors;
+
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+    geometry_msgs::msg::Vector3 alignment_vector;
+    alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
+    alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
+    alignment_vectors.vectors.push_back(alignment_vector);
+  }
+  return alignment_vectors;
+}
+
+geometry_msgs::msg::Point
+ReynoldRulesNode::calc_average_pos(std::vector<nav_msgs::msg::Odometry> positions)
+{
+  geometry_msgs::msg::Point average_pos;
+
+  for (nav_msgs::msg::Odometry position : positions) {
+    average_pos.x += position.pose.pose.position.x;
+    average_pos.y += position.pose.pose.position.y;
+  }
+
+  average_pos.x = average_pos.x / positions.size();
+  average_pos.y = average_pos.y / positions.size();
+
+  return average_pos;
+
+}
+
+geometry_msgs::msg::Vector3
+ReynoldRulesNode::calc_cohesion_vector(geometry_msgs::msg::Point robot_pos)
+{
+  geometry_msgs::msg::Vector3 vector;
+  std::vector<nav_msgs::msg::Odometry> neighbors;
+
+  // Make a list with all robots poses in the range of cohesion
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+      double dist = get_distance(robot_pos, robot->pose.pose.position);
+
+      if (dist < view_range_) {
+          neighbors.push_back(*robot);
+      }
+  }
+
+  // Calculate vector from robot_pos to average_pos of neighbors
+  geometry_msgs::msg::Point average_pos = calc_average_pos(neighbors);
+  vector.x = average_pos.x - robot_pos.x;
+  vector.y = average_pos.y - robot_pos.y;
+
+  return vector;
 }
 
 std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::cohesion_rule()
 {
-  void();
+  ArrayVector3d cohesion_vectors;
+
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+      geometry_msgs::msg::Vector3 cohesion_vector = calc_cohesion_vector(robot->pose.pose.position);
+      cohesion_vectors.vectors.push_back(cohesion_vector);
+  }
+
+  return cohesion_vectors;
 }
 
 // Find the neighbors of a waypoint
@@ -519,11 +597,108 @@ ReynoldRulesNode::avoidance_rule()
   void();
 }
 
-
-double
-ReynoldRulesNode::calc_length(const geometry_msgs::msg::Vector3& vector)
+geometry_msgs::msg::Vector3
+ReynoldRulesNode::sum_weighted_repellent_vectors(int robot_index)
 {
-	return std::sqrt(vector.x * vector.x + vector.y * vector.y);
+  // Find obstacles in the view range and compute the weighted sum of the distance vectors.
+  // The weight for each distance vector is (-1 / distance) to simulate a repellent force.
+
+  geometry_msgs::msg::Vector3 v3;
+
+  if (!robots_[robot_index]) {
+      return v3;
+  }
+
+  auto robot_pose = robots_[robot_index]->pose.pose;
+  std::vector<geometry_msgs::msg::Point> obstacles = find_obstacles(robot_pose);
+  if (size(obstacles) == 0) {
+      return v3;
+  }
+
+  std::vector<double> robot_position = {robot_pose.position.x, robot_pose.position.y};
+
+
+  std::vector<double> v = {0.0, 0.0};
+  for (geometry_msgs::msg::Point obstacle : obstacles) {
+    std::vector<double> obstacle_arr = {obstacle.x, obstacle.y};
+    std::vector<double> opposite_vector;
+    opposite_vector[0] = robot_position[0] - obstacle_arr[0];
+    opposite_vector[1] = robot_position[1] - obstacle_arr[1];
+    double distance = compute_norm(opposite_vector);
+    if (distance != 0) {
+        v[0] += opposite_vector[0] / distance;
+        v[1] += opposite_vector[1] / distance;
+    }
+  }
+
+  v[0] = v[0] / size(obstacles);
+  v[1] = v[1] / size(obstacles);
+
+  v3.x = v[0];
+  v3.y = v[1];
+  return v3;
+}
+
+std::vector<geometry_msgs::msg::Point>
+ReynoldRulesNode::find_obstacles(const geometry_msgs::msg::Pose robot_pose)
+{
+  std::vector<geometry_msgs::msg::Point> obstacles;
+  if (!map_) {
+    return obstacles;
+  }
+
+  double robot_x = robot_pose.position.x;
+  double robot_y = robot_pose.position.y;
+  auto robot_q = robot_pose.orientation;
+
+  double robot_yaw = 2 * atan2(robot_q.z, robot_q.w);
+
+  double min_angle = view_split_ * (M_PI / 180.0);
+  double max_angle = (view_split_ + view_angle_) * (M_PI / 180.0);
+
+  double radial_step_size = map_->info.resolution;
+  int n_radial = static_cast<int>(view_range_ / radial_step_size);
+  auto s = ANGULAR_STEPSIZE;
+  std::vector<int> angular_range;
+  for (int i = int(-max_angle / s); i < int(max_angle / s); ++i) {
+    if (i < int(-min_angle / s) || i >= int(min_angle / s)) {
+      angular_range.push_back(i);
+    }
+  }
+
+  for (auto a : angular_range) {
+      double alpha = robot_yaw + a * ANGULAR_STEPSIZE;
+      double cos_alpha = cos(alpha);
+      double sin_alpha = sin(alpha);
+      for (int r = 1; r < n_radial; r++) {
+          double distance = r * radial_step_size;
+          geometry_msgs::msg::Point p;
+          p.x = robot_x + distance * cos_alpha;
+          p.y = robot_y + distance * sin_alpha;
+          // ** TODO p.z (?)
+          if (map_lookup(p)){
+              obstacles.push_back(p);
+          }
+      }
+  }
+  return obstacles;
+}
+
+bool
+ReynoldRulesNode::map_lookup(geometry_msgs::msg::Point& pos)
+{
+  // Return True if the position is within the map and there is an obstacle, else False
+
+  if (!map_) {
+  return false;
+  }
+    int i = static_cast<int>((pos.y - map_->info.origin.position.y) / map_->info.resolution);
+    int j = static_cast<int>((pos.x - map_->info.origin.position.x) / map_->info.resolution);
+    int index = map_->info.width * i + j;
+    if (index < 0 || index >= static_cast<int>(map_->data.size())) {
+      return false;
+    }
+    return map_->data[index] == 100;
 }
 
 void

@@ -53,6 +53,7 @@ private:
 	double alignment_weight_{0.0};
 	double nav2point_weight_{0.0};
 	double obstacle_avoidance_weight_{0.0};
+	double formation_weight_ {0.0};
 
 	// Formation Control
 	int formation_type_;

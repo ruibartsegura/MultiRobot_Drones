@@ -78,11 +78,11 @@ namespace {
 
 [[nodiscard]] double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2)
 {
-  auto x = pos1.x - pos2.x;
-  auto y = pos1.y - pos2.y;
-  auto z = pos1.z - pos2.z;
-  std::cout << "DIST" << sqrt(x * x + y * y + z * z) << std::endl;
-  return sqrt(x * x + y * y + z * z);
+	auto x = pos1.x - pos2.x;
+	auto y = pos1.y - pos2.y;
+	auto z = pos1.z - pos2.z;
+	// std::cout << "DIST" << sqrt(x * x + y * y + z * z) << std::endl;
+	return sqrt(x * x + y * y + z * z);
 }
 
 } // namespace
@@ -111,20 +111,19 @@ ReynoldRulesNode::ReynoldRulesNode()
 	std::string navigationMethod;
 	declare_parameter("navigation_method", navigationMethod);
 	get_parameter("navigation_method", navigationMethod);
-	if (navigationMethod == "Rendezvous") {
-		navigationMethod_ = NavigationMethod::Rendezvous;
 
-		std::string topology;
-		declare_parameter("topology", topology);
-		get_parameter("topology", topology);
-		try {
-			topology_ = parseTopology(topology);
-			RCLCPP_INFO(get_logger(), "Parsed topology: %s", topology.c_str());
-		} catch (const std::exception& e) {
-			// fill topology with zeros
-			topology_ = {NUMBER_DRONES, std::vector<double>(NUMBER_DRONES)};
-			RCLCPP_ERROR(get_logger(), "Communication disabled, parsing failed: %s", e.what());
-		}
+	navigationMethod_ = NavigationMethod::Rendezvous;
+
+	std::string topology;
+	declare_parameter("topology", topology);
+	get_parameter("topology", topology);
+	try {
+		topology_ = parseTopology(topology);
+		RCLCPP_INFO(get_logger(), "Parsed topology: %s", topology.c_str());
+	} catch (const std::exception& e) {
+		// fill topology with zeros
+		topology_ = {NUMBER_DRONES, std::vector<double>(NUMBER_DRONES)};
+		RCLCPP_ERROR(get_logger(), "Communication disabled, parsing failed: %s", e.what());
 	}
 
 	// Make sure the array of the odom for the drones is of the correct size
@@ -162,8 +161,8 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 
 	robots_[drone_number - 1] = data;
 
-  std::cout << "H" << data->pose.pose.position.z << std::endl;
-  if (data->pose.pose.position.z > 0.3) READY = true;
+  	// std::cout << "H" << data->pose.pose.position.z << std::endl;
+  	if (data->pose.pose.position.z > 0.3) READY = true;
 }
 
 void
@@ -531,18 +530,17 @@ void
 ReynoldRulesNode::control_cycle()
 {
 	if (READY) {
-		std::cout << "ready" << std::endl;
 		std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
 		        separation_rule(),
 		        // aligment_rule(),
 		        // cohesion_rule(),
-		        nav_2_point_rule(),
+		        //nav_2_point_rule(),
 		        // avoidance_rule()
 		};
 
 		std::vector<double> weights = {
 		        separation_weight_,
-				nav2point_weight_,
+				//nav2point_weight_,
 		        // obstacle_avoidance_weight_,
 		        // cohesion_weight_,
 		        // alignment_weight_
@@ -550,7 +548,7 @@ ReynoldRulesNode::control_cycle()
 
 		if (formation_type_ != NONE) {
 			rules.push_back(formation_control());
-			weights.push_back(1.0);
+			weights.push_back(formation_weight_);
 		}
 
 		for (size_t i = 0; i < NUMBER_DRONES; ++i) {
@@ -573,8 +571,8 @@ ReynoldRulesNode::control_cycle()
 			vel.linear.x = std::min(linear_mult_ * total_vector.x, MAX_LIN_VEL);
 			vel.linear.y = std::min(linear_mult_ * total_vector.y, MAX_LIN_VEL);
 	
-			// Imprimir los valores de separation_vectors
-			std::cout << "VELOCITY " << i << ": x=" << vel.linear.x
+			// Imprimir los valores de velocidad de los drones
+			std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
 			          << ", y=" << vel.linear.y << std::endl;
 
 			publishers_[i]->publish(vel);
@@ -689,10 +687,7 @@ ReynoldRulesNode::set_formation_matrix(
 
 			formation_matrix_[i][j].x = formation_points[j].x - formation_points[i].x;
 			formation_matrix_[i][j].y = formation_points[j].y - formation_points[i].y;
-			std::cout << std::to_string(formation_matrix_[i][j].x) <<
-						"," << std::to_string(formation_matrix_[i][j].y) << "; ";
 		}
-		std::cout << std::endl;
 	}
 }
 
@@ -702,19 +697,19 @@ ReynoldRulesNode::formation_control_setup()
 //  Sets up everything neccesary for formation protocol if it is activated
 	float side_length;
 
+	this->declare_parameter("formation_weight", 0.0);
 	this->declare_parameter("formation_type", 0);
 	this->declare_parameter("side_length", 0.0);
 
+	this->get_parameter("formation_weight", formation_weight_);
 	this->get_parameter("formation_type", formation_type_);
 	this->get_parameter("side_length", side_length);
 
 	// Dont create unneccessay matrix if not needed
 	if (formation_type_ == NONE) {return;}
 
-	std::cout << "formation type: " <<
-				std::to_string(formation_type_).c_str()
-				<< "\nside length: "
-				<< std::to_string(side_length).c_str();
+	std::cout << "formation type: " << std::to_string(formation_type_).c_str()
+			<< "\nside length: " << std::to_string(side_length).c_str() << std::endl;
 
 	set_formation_matrix(get_formation_points(formation_type_, side_length));
 }

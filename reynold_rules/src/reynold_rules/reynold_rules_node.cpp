@@ -196,7 +196,7 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 
   	if (data->pose.pose.position.z > 0.3) {
 		READY = true;
-		std::cout << "H" << data->pose.pose.position.z << std::endl;
+		//std::cout << "H" << data->pose.pose.position.z << std::endl;
 	}
 }
 
@@ -282,10 +282,12 @@ ReynoldRulesNode::calc_average_velocity()
 	for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
 		avg_velocity.x += robot->twist.twist.linear.x;
 		avg_velocity.y += robot->twist.twist.linear.y;
+		avg_velocity.z += robot->twist.twist.linear.z;
 	}
 
 	avg_velocity.x /= NUMBER_DRONES;
 	avg_velocity.y /= NUMBER_DRONES;
+	avg_velocity.z /= NUMBER_DRONES;
 
 	return avg_velocity;
 }
@@ -300,8 +302,16 @@ ReynoldRulesNode::aligment_rule()
     geometry_msgs::msg::Vector3 alignment_vector;
     alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
     alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
+	alignment_vector.z = avg_velocity.z - robot->twist.twist.linear.z;
     alignment_vectors.push_back(alignment_vector);
   }
+
+// Imprimir los valores de alignment_vectors
+ std::cout << "Alignment vectors:" << std::endl;
+ for (size_t i = 0; i < alignment_vectors.size(); ++i) {
+     const auto &vec = alignment_vectors[i];
+     std::cout << "Drone " << i << ": x=" << vec.x << ", y=" << vec.y << ", z=" << vec.z << std::endl;
+ }
   return alignment_vectors;
 }
 
@@ -313,10 +323,12 @@ ReynoldRulesNode::calc_average_pos(std::vector<nav_msgs::msg::Odometry> position
   for (nav_msgs::msg::Odometry position : positions) {
     average_pos.x += position.pose.pose.position.x;
     average_pos.y += position.pose.pose.position.y;
+	average_pos.z += position.pose.pose.position.z;
   }
 
   average_pos.x = average_pos.x / positions.size();
   average_pos.y = average_pos.y / positions.size();
+  average_pos.z = average_pos.z / positions.size();
 
   return average_pos;
 
@@ -739,19 +751,19 @@ ReynoldRulesNode::control_cycle()
 {
 	if (READY) {
 		std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
-		        separation_rule(),
-		        // aligment_rule(),
-		        cohesion_rule(),
+		        // separation_rule(),
+		        aligment_rule(),
+		        // cohesion_rule(),
 		        //nav_2_point_rule(),
 		        // avoidance_rule()
 		};
 
 		std::vector<double> weights = {
-		        separation_weight_,
+		        // separation_weight_,
 				//nav2point_weight_,
 		        // obstacle_avoidance_weight_,
-		        cohesion_weight_,
-		        // alignment_weight_
+		        // cohesion_weight_,
+		        alignment_weight_
 		};
 
 		// if (formation_type_ != NONE) {

@@ -483,7 +483,13 @@ ReynoldRulesNode::nav_2_point_rule()
 ArrayVector3d
 ReynoldRulesNode::avoidance_rule()
 {
-  void();
+  ArrayVector3d avoidance_vectors;
+
+  for (int i = 0; i < NUMBER_DRONES; i++) {
+    avoidance_vectors.vectors.push_back(sum_weighted_repellent_vectors(i));
+  }
+
+  return avoidance_vectors;
 }
 
 geometry_msgs::msg::Vector3

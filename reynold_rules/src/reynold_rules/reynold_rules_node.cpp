@@ -179,12 +179,12 @@ ReynoldRulesNode::ReynoldRulesNode()
 		RCLCPP_INFO(get_logger(), "Parsed topology: %s", topology.c_str());
 	} catch (const std::exception& e) {
 		// fill topology with zeros
-		topology_ = {NUMBER_DRONES, std::vector<double>(NUMBER_DRONES)};
+		topology_ = {static_cast<size_t>(NUMBER_DRONES), std::vector<double>(NUMBER_DRONES)};
 		RCLCPP_ERROR(get_logger(), "Communication disabled, parsing failed: %s", e.what());
 	}
 
 	// Make sure the array of the odom for the drones is of the correct size
-	if (robots_.size() <= NUMBER_DRONES) {
+	if (robots_.size() <= static_cast<size_t>(NUMBER_DRONES)) {
 		robots_.resize(NUMBER_DRONES); // Redimensiona si es necesario
 	}
 
@@ -787,7 +787,7 @@ ReynoldRulesNode::control_cycle()
 		// 	weights.push_back(formation_weight_);
 		// }
 
-		for (size_t i = 0; i < NUMBER_DRONES; ++i) {
+		for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); ++i) {
 			geometry_msgs::msg::Vector3 total_vector;
 
 			for (size_t j = 0; j < rules.size(); ++j) {
@@ -919,7 +919,7 @@ ReynoldRulesNode::set_formation_matrix(
 	std::vector<geometry_msgs::msg::Point> formation_points)
 {
 	// Set matrix initially to all 0
-	formation_matrix_ = {NUMBER_DRONES, std::vector<geometry_msgs::msg::Point>(NUMBER_DRONES)};
+	formation_matrix_ = {static_cast<size_t>(NUMBER_DRONES), std::vector<geometry_msgs::msg::Point>(NUMBER_DRONES)};
 
 	for (int i = 0; i < NUMBER_DRONES; i++) {
 		for (int j = 0; j < NUMBER_DRONES; j++) {

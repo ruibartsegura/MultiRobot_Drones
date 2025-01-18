@@ -44,7 +44,7 @@ public:
 private:
 	bool READY = false;
 
-	static const int NUMBER_DRONES{4};
+	int NUMBER_DRONES{4};
 	double MAX_LIN_VEL{1};
 	double MIN_LIN_VEL{0.0};
 	double DIST_THRESHOLD{1};

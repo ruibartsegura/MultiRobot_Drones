@@ -1,4 +1,4 @@
-/publisher_node:
+/reynold_rules_node:
   ros__parameters:
     use_sim_time: true
     NUMBER_DRONES: 4
@@ -6,7 +6,7 @@
     MIN_LIN_VEL: 0.4
     DIST_THRESHOLD: 0.4
     navigation_method: "RosParam"
-    topology: "0,0,0,0;1,0,0,0;1,0,0,0;1,0,0,0"
+    topology: "0,1,1,1;0,0,0,0;0,0,0,0;0,0,0,0"
     separation_weight_: 0.4
     cohesion_weight_: 0.4
     alignment_weight_: 0.4
@@ -15,5 +15,5 @@
     last_linear_vel_: 0.4
     MAX_VEL_DIFF_FACTOR: 0.4
     formation_type: 2 # 1->None, 2->line, 3->triangle, 4->square
-    side_legnth: 0
+    side_length: 3.0
 

@@ -61,12 +61,12 @@ private:
 	static const int TRIANGLE = 3;
 	static const int SQUARE = 4;
 
-	std::vector<std::vector<double>> formation_matrix_;
-	std::vector<geometry_msgs::msg::Point> formation_points_;
-	std::vector<geometry_msgs::msg::Point> get_figure_points(int, float);
+	std::vector<std::vector<geometry_msgs::msg::Point>> formation_matrix_;
+	std::vector<geometry_msgs::msg::Point> get_formation_points(int, float);
+	void set_formation_matrix(std::vector<geometry_msgs::msg::Point>);
+
 
 	std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
-	rclcpp::TimerBase::SharedPtr timer_;
 
 	// Pub and subs vectors
 	std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
@@ -123,6 +123,8 @@ private:
 	rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
   	
 	void checkPathsBetweenWaypoints();
+
+	rclcpp::TimerBase::SharedPtr timer_;
 };
 
 } //  namespace reynold_rules

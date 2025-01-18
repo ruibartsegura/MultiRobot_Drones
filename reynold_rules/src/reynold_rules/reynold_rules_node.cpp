@@ -5,6 +5,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <string>
+#include <cmath>
 #include <vector>
 
 #include "geometry_msgs/msg/point.hpp"
@@ -77,11 +78,11 @@ namespace {
 
 [[nodiscard]] double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2)
 {
-  auto x = pos1.x - pos2.x;
-  auto y = pos1.y - pos2.y;
-  auto z = pos1.z - pos2.z;
-  std::cout << "DIST" << sqrt(x * x + y * y + z * z) << std::endl;
-  return sqrt(x * x + y * y + z * z);
+	auto x = pos1.x - pos2.x;
+	auto y = pos1.y - pos2.y;
+	auto z = pos1.z - pos2.z;
+	// std::cout << "DIST" << sqrt(x * x + y * y + z * z) << std::endl;
+	return sqrt(x * x + y * y + z * z);
 }
 
 } // namespace
@@ -91,37 +92,38 @@ namespace reynold_rules {
 ReynoldRulesNode::ReynoldRulesNode()
 : Node("reynold_rules_node"), map_(nullptr)
 {
-  // Parameters
-  declare_parameter("view_range", view_range_);
-  get_parameter("view_range", view_range_);
+	formation_control_setup();
 
-  // List of waypoint to de nav_2_point
-  for (int x = -4; x <= 4; x += 2) {
-    for (int y = -4; y <= 4; y += 2) {
-        geometry_msgs::msg::Point wp;
-        wp.x = x;
-        wp.y = y;
-        waypoints_.push_back(wp);
-    }
-  }
+	// Parameters
+	declare_parameter("view_range", view_range_);
+	get_parameter("view_range", view_range_);
+
+	// List of waypoint to de nav_2_point
+	for (int x = -4; x <= 4; x += 2) {
+		for (int y = -4; y <= 4; y += 2) {
+			geometry_msgs::msg::Point wp;
+			wp.x = x;
+			wp.y = y;
+			waypoints_.push_back(wp);
+		}
+	}
 
 	std::string navigationMethod;
 	declare_parameter("navigation_method", navigationMethod);
 	get_parameter("navigation_method", navigationMethod);
-	if (navigationMethod == "Rendezvous") {
-		navigationMethod_ = NavigationMethod::Rendezvous;
 
-		std::string topology;
-		declare_parameter("topology", topology);
-		get_parameter("topology", topology);
-		try {
-			topology_ = parseTopology(topology);
-			RCLCPP_INFO(get_logger(), "Parsed topology: %s", topology.c_str());
-		} catch (const std::exception& e) {
-			// fill topology with zeros
-			topology_ = {NUMBER_DRONES, std::vector<double>(NUMBER_DRONES)};
-			RCLCPP_ERROR(get_logger(), "Communication disabled, parsing failed: %s", e.what());
-		}
+	navigationMethod_ = NavigationMethod::Rendezvous;
+
+	std::string topology;
+	declare_parameter("topology", topology);
+	get_parameter("topology", topology);
+	try {
+		topology_ = parseTopology(topology);
+		RCLCPP_INFO(get_logger(), "Parsed topology: %s", topology.c_str());
+	} catch (const std::exception& e) {
+		// fill topology with zeros
+		topology_ = {NUMBER_DRONES, std::vector<double>(NUMBER_DRONES)};
+		RCLCPP_ERROR(get_logger(), "Communication disabled, parsing failed: %s", e.what());
 	}
 
 	// Make sure the array of the odom for the drones is of the correct size
@@ -159,8 +161,8 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 
 	robots_[drone_number - 1] = data;
 
-  std::cout << "H" << data->pose.pose.position.z << std::endl;
-  if (data->pose.pose.position.z > 0.3) READY = true;
+  	// std::cout << "H" << data->pose.pose.position.z << std::endl;
+  	if (data->pose.pose.position.z > 0.3) READY = true;
 }
 
 void
@@ -532,16 +534,22 @@ ReynoldRulesNode::control_cycle()
 		        separation_rule(),
 		        // aligment_rule(),
 		        // cohesion_rule(),
-		        nav_2_point_rule(),
+		        //nav_2_point_rule(),
 		        // avoidance_rule()
 		};
 
 		std::vector<double> weights = {
-		        separation_weight_, nav2point_weight_,
+		        separation_weight_,
+				//nav2point_weight_,
 		        // obstacle_avoidance_weight_,
 		        // cohesion_weight_,
 		        // alignment_weight_
 		};
+
+		if (formation_type_ != NONE) {
+			rules.push_back(formation_control());
+			weights.push_back(formation_weight_);
+		}
 
 		for (size_t i = 0; i < NUMBER_DRONES; ++i) {
 			geometry_msgs::msg::Vector3 total_vector;
@@ -563,8 +571,8 @@ ReynoldRulesNode::control_cycle()
 			vel.linear.x = std::min(linear_mult_ * total_vector.x, MAX_LIN_VEL);
 			vel.linear.y = std::min(linear_mult_ * total_vector.y, MAX_LIN_VEL);
 	
-			// Imprimir los valores de separation_vectors
-			std::cout << "VELOCITY " << i << ": x=" << vel.linear.x
+			// Imprimir los valores de velocidad de los drones
+			std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
 			          << ", y=" << vel.linear.y << std::endl;
 
 			publishers_[i]->publish(vel);
@@ -593,7 +601,7 @@ ReynoldRulesNode::checkPathsBetweenWaypoints() {
 void
 ReynoldRulesNode::rendezvous_protocol()
 {
-	// Implement a consensus-based rendezvous protocol. Goal of a rendezvous protocol is to
+	// Implement a consensus-based rendezvous protocol. vector of a rendezvous protocol is to
 	// gather the robots in a common position in space. Test the behavior for at least two fixed
 	// directed communication topologies for random initial positions of the robots.
 	this->paths_.clear();
@@ -615,6 +623,127 @@ ReynoldRulesNode::rendezvous_protocol()
 		path.push_back(x);
 		this->paths_.emplace_back(path);
 	}
+}
+
+std::vector<geometry_msgs::msg::Point>	
+ReynoldRulesNode::get_formation_points(int type, float side_length)
+{
+// Create vector with point for each robot in the desired figure
+	float dist;
+
+	std::vector<geometry_msgs::msg::Point> points;
+	geometry_msgs::msg::Point point1, point2, point3, point4;
+
+	switch (type) {
+	case LINE: // (0,0); (d,0); (2d,0); (3d,0)...
+		dist = side_length / NUMBER_DRONES;
+		for (int i = 0; i < NUMBER_DRONES; i++) {
+
+			geometry_msgs::msg::Point point;
+			point.x = dist * i;
+			point.y = 0;
+
+			points.push_back(point);
+		}
+		break;
+
+	case TRIANGLE: //(0,0); (0,l); (l/2, lcos(pi/6)); (l/2, l/2cos(pi/6))
+		point1.x = 0;
+		point1.y = 0;
+
+		point2.x = side_length;
+		point2.y = 0;
+
+		point3.x = side_length / 2;
+		point3.y = side_length * std::cos(M_PI / 6);
+
+		point4.x = point3.x;
+		point4.y = point3.y / 2;
+
+		points = {point1, point2, point3, point4};
+		break;
+
+	case SQUARE: //(0,0); (l,0); (l, l); (0, l)
+		point1.x = point1.y = point2.y = point4.x = 0;
+		point2.x = point3.x = point3.y = point4.y = side_length;
+
+		points = {point1, point2, point3, point4};
+	}
+
+	return points;
+}
+
+/** Sets matrix containing relative position of each robot
+	using points of the figure to represent */
+void
+ReynoldRulesNode::set_formation_matrix(
+	std::vector<geometry_msgs::msg::Point> formation_points)
+{
+	// Set matrix initially to all 0
+	formation_matrix_ = {NUMBER_DRONES, std::vector<geometry_msgs::msg::Point>(NUMBER_DRONES)};
+
+	for (int i = 0; i < NUMBER_DRONES; i++) {
+		for (int j = 0; j < NUMBER_DRONES; j++) {
+
+			formation_matrix_[i][j].x = formation_points[j].x - formation_points[i].x;
+			formation_matrix_[i][j].y = formation_points[j].y - formation_points[i].y;
+		}
+	}
+}
+
+void
+ReynoldRulesNode::formation_control_setup()
+{
+//  Sets up everything neccesary for formation protocol if it is activated
+	float side_length;
+
+	this->declare_parameter("formation_weight", 0.0);
+	this->declare_parameter("formation_type", 0);
+	this->declare_parameter("side_length", 0.0);
+
+	this->get_parameter("formation_weight", formation_weight_);
+	this->get_parameter("formation_type", formation_type_);
+	this->get_parameter("side_length", side_length);
+
+	// Dont create unneccessay matrix if not needed
+	if (formation_type_ == NONE) {return;}
+
+	std::cout << "formation type: " << std::to_string(formation_type_).c_str()
+			<< "\nside length: " << std::to_string(side_length).c_str() << std::endl;
+
+	set_formation_matrix(get_formation_points(formation_type_, side_length));
+}
+
+std::vector<geometry_msgs::msg::Vector3>
+ReynoldRulesNode::formation_control()
+{
+	std::vector<geometry_msgs::msg::Vector3> formation_vectors;
+
+	for (int i = 0; i < NUMBER_DRONES; i++) {
+		geometry_msgs::msg::Vector3 final_vector;
+
+		for (int j = 0; j < NUMBER_DRONES; j++) {
+
+			// Access matrix trasposed (Personal Implementation)
+			const auto a_ij = topology_.at(j).at(i);
+			geometry_msgs::msg::Vector3 vector;
+
+			vector.x = a_ij * (robots_[j]->pose.pose.position.x
+							- robots_[i]->pose.pose.position.x
+							+ formation_matrix_[j][i].x);
+		
+			vector.y = a_ij * (robots_[j]->pose.pose.position.y
+							- robots_[i]->pose.pose.position.y
+							+ formation_matrix_[j][i].y);
+			
+			final_vector.x = final_vector.x + vector.x;
+			final_vector.y = final_vector.y + vector.y;
+		}
+
+		formation_vectors.push_back(final_vector);
+	}
+
+	return formation_vectors;
 }
 
 } //  namespace reynold_rules

@@ -186,17 +186,20 @@ ReynoldRulesNode::ReynoldRulesNode()
 	// Make sure the array of the odom for the drones is of the correct size
 	if (robots_.size() <= static_cast<size_t>(NUMBER_DRONES)) {
 		robots_.resize(NUMBER_DRONES); // Redimensiona si es necesario
+		ready_.resize(NUMBER_DRONES);
 	}
 
-	for (int i = 1; i <= NUMBER_DRONES; i++) {
-		std::string odom_topic = "/cf_" + std::to_string(i) + "/odom";
-		std::string vel_topic  = "/cf_" + std::to_string(i) + "/cmd_vel";
+	for (int i = 0; i <= NUMBER_DRONES; i++) {
+		std::string odom_topic = "/cf_" + std::to_string(i + 1) + "/odom";
+		std::string vel_topic  = "/cf_" + std::to_string(i + 1) + "/cmd_vel";
 
 		publishers_.push_back(create_publisher<geometry_msgs::msg::Twist>(vel_topic, 10));
 		subscribers_.push_back(create_subscription<nav_msgs::msg::Odometry>(
 		        odom_topic,
 		        10,
 		        std::bind(&ReynoldRulesNode::odom_callback, this, std::placeholders::_1)));
+		
+		ready_[i] = false;
 	}
 
 	map_sub_ = create_subscription<nav_msgs::msg::OccupancyGrid>(
@@ -219,7 +222,7 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 	robots_[drone_number - 1] = data;
 
   	// std::cout << "H" << data->pose.pose.position.z << std::endl;
-	if (data->pose.pose.position.z > HEIGHT) READY = true;
+	if (data->pose.pose.position.z > HEIGHT) ready_[drone_number - 1] = true;
 }
 
 void
@@ -762,54 +765,57 @@ ReynoldRulesNode::calc_length(const geometry_msgs::msg::Vector3& vector)
 void
 ReynoldRulesNode::control_cycle()
 {	
-	if (READY) {
-		std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
-		        // separation_rule(),
-		        // aligment_rule(),
-		        // cohesion_rule(),
-		        nav_2_point_rule(),
-		        // avoidance_rule(),
-				formation_control()
-		};
+	// Waits for all drones to be ready
+	for (int i = 0; i < NUMBER_DRONES; i++) {
+		if (ready_[i] == false) {
+			std::cout << "Waiting..." << std::endl;
+			return;
+		}
+	}
 
-		std::vector<double> weights = {
-		        // separation_weight_,
-				nav2point_weight_,
-		        // obstacle_avoidance_weight_,
-		        // cohesion_weight_,
-		        // alignment_weight_
-				formation_weight_
-		};
+	std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
+			// separation_rule(),
+			// aligment_rule(),
+			// cohesion_rule(),
+			//nav_2_point_rule(),
+			// avoidance_rule(),
+			//formation_control()
+	};
 
-		for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); ++i) {
-			geometry_msgs::msg::Vector3 total_vector;
+	std::vector<double> weights = {
+			// separation_weight_,
+			//nav2point_weight_,
+			// obstacle_avoidance_weight_,
+			// cohesion_weight_,
+			// alignment_weight_
+			//formation_weight_
+	};
 
-			for (size_t j = 0; j < rules.size(); ++j) {
-				geometry_msgs::msg::Vector3 new_vector;
-				new_vector.x = weights[j] * rules[j][i].x;
-				new_vector.y = weights[j] * rules[j][i].y;
+	for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); i++) {
+		geometry_msgs::msg::Vector3 total_vector;
 
-				total_vector.x += new_vector.x;
-				total_vector.y += new_vector.y;
+		for (size_t j = 0; j < rules.size(); j++) {
+			geometry_msgs::msg::Vector3 new_vector;
+			new_vector.x = weights[j] * rules[j][i].x;
+			new_vector.y = weights[j] * rules[j][i].y;
 
-				if (calc_length(new_vector) > MAX_LIN_VEL) {
-					break;
-				}
+			total_vector.x += new_vector.x;
+			total_vector.y += new_vector.y;
+
+			if (calc_length(new_vector) > MAX_LIN_VEL) {
+				break;
 			}
-
-			geometry_msgs::msg::Twist vel;
-			vel.linear.x = std::min(linear_mult_ * total_vector.x, MAX_LIN_VEL);
-			vel.linear.y = std::min(linear_mult_ * total_vector.y, MAX_LIN_VEL);
-
-			// Imprimir los valores de velocidad de los drones
-			// std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
-			//           << ", y=" << vel.linear.y << std::endl;
-
-			publishers_[i]->publish(vel);
 		}
 
-	} else {
-		std::cout << "Waiting..." << std::endl;
+		geometry_msgs::msg::Twist vel;
+		vel.linear.x = std::min(linear_mult_ * total_vector.x, MAX_LIN_VEL);
+		vel.linear.y = std::min(linear_mult_ * total_vector.y, MAX_LIN_VEL);
+
+		// Imprimir los valores de velocidad de los drones
+		// std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
+		//           << ", y=" << vel.linear.y << std::endl;
+
+		publishers_[i]->publish(vel);
 	}
 }
 
@@ -930,7 +936,7 @@ ReynoldRulesNode::formation_control_setup()
 //  Sets up everything neccesary for formation protocol if it is activated
 
 	this->declare_parameter("formation_weight", 0.0);
-	this->declare_parameter("formation_type", 0);
+	this->declare_parameter("formation_type", 1);
 	this->declare_parameter("side_length", 0.0);
 
 	this->get_parameter("formation_weight", formation_weight_);

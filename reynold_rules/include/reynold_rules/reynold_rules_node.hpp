@@ -42,7 +42,7 @@ public:
   	std::vector<geometry_msgs::msg::Vector3> formation_control();
 
 private:
-	bool READY = false;
+	std::vector<bool> ready_;
 
 	int NUMBER_DRONES{4};
 	double MAX_LIN_VEL{1};

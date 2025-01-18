@@ -37,7 +37,7 @@ public:
 
 	/// @brief execute the rendezvous_protocol and update each robot's path in paths_
 	void rendezvous_protocol();
-  	std::vector<geometry_msgs::msg::Vector3> formation_control_setup();
+  	void formation_control_setup();
   	std::vector<geometry_msgs::msg::Vector3> formation_control();
 
 private:
@@ -54,20 +54,23 @@ private:
 	double nav2point_weight_{0.0};
 	double obstacle_avoidance_weight_{0.0};
 
-  // Formation Control
-  static const int LINE = 0;
-  static const int TRIANGLE = 1;
-  static const int SQUARE = 2;
+	// Formation Control
+	int formation_type_;
+	static const int NONE = 1;
+	static const int LINE = 2;
+	static const int TRIANGLE = 3;
+	static const int SQUARE = 4;
 
-  int side_length_;
-  int formation_type_;
+	std::vector<std::vector<double>> formation_matrix_;
+	std::vector<geometry_msgs::msg::Point> formation_points_;
+	std::vector<geometry_msgs::msg::Point> get_figure_points(int, float);
 
-  std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
-  rclcpp::TimerBase::SharedPtr timer_;
+	std::vector<nav_msgs::msg::Odometry::SharedPtr> robots_;
+	rclcpp::TimerBase::SharedPtr timer_;
 
-  // Pub and subs vectors
-  std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
-  std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> subscribers_;
+	// Pub and subs vectors
+	std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
+	std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> subscribers_;
 
 	// Map
 	nav_msgs::msg::OccupancyGrid::SharedPtr map_;
@@ -120,8 +123,6 @@ private:
 	rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
   	
 	void checkPathsBetweenWaypoints();
-	
-	rclcpp::TimerBase::SharedPtr timer_;
 };
 
 } //  namespace reynold_rules

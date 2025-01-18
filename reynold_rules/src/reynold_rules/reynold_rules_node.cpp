@@ -537,6 +537,10 @@ ReynoldRulesNode::control_cycle()
 		        // avoidance_rule()
 		};
 
+		if (formation_type_ != NONE) {
+			rules.push_back(formation_control());
+		}
+
 		std::vector<double> weights = {
 		        separation_weight_, nav2point_weight_,
 		        // obstacle_avoidance_weight_,
@@ -618,48 +622,36 @@ ReynoldRulesNode::rendezvous_protocol()
 	}
 }
 
-std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control_setup()
+std::vector<geometry_msgs::msg::Point>	
+ReynoldRulesNode::get_figure_points(int type, float side_length)
 {
-	this->declare_parameter("formation_type", 0);
-	this->declare_parameter("side_length", 0);
-
-	this->get_parameter("formation_type", formation_type_);
-	this->get_parameter("side_length", side_length_);
-
-	RCLCPP_INFO(this->get_logger(), "formation type: ", std::to_string(formation_type_));
-}
-
-std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control()
-{
+// Create vector with point for each robot in the desired figure
 	std::vector<geometry_msgs::msg::Point> points;
 
-	switch (formation_type_) {
-	case LINE:
-		float dist = side_length_ / NUMBER_DRONES;
-
-    // (0,0); (d,0); (2d,0); (3d,0)...
+	switch (type) {
+	case LINE: // (0,0); (d,0); (2d,0); (3d,0)...
+		float dist = side_length / NUMBER_DRONES;
 		for (int i = 0; i < NUMBER_DRONES; i++) {
-			geometry_msgs::msg::Point point;
 
+			geometry_msgs::msg::Point point;
 			point.x = dist * i;
 			point.y = 0;
+
 			points.push_back(point);
 		}
-
 		break;
 
-	case TRIANGLE:
-		geometry_msgs::msg::Point point1, point2, point3, point4;
+	geometry_msgs::msg::Point point1, point2, point3, point4;
 
-		//(0,0); (0,l); (l/2, lcos(pi/6)); (l/2, l/2cos(pi/6))
+	case TRIANGLE: //(0,0); (0,l); (l/2, lcos(pi/6)); (l/2, l/2cos(pi/6))
 		point1.x = 0;
 		point1.y = 0;
 
-		point2.x = side_length_;
+		point2.x = side_length;
 		point2.y = 0;
 
-		point3.x = side_length_ / 2;
-		point3.y = side_length_ * std::cos(M_PI / 6);
+		point3.x = side_length / 2;
+		point3.y = side_length * std::cos(M_PI / 6);
 
 		point4.x = point3.x;
 		point4.y = point3.y / 2;
@@ -667,19 +659,64 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control()
 		points = {point1, point2, point3, point4};
 		break;
 
-	case SQUARE:
-		geometry_msgs::msg::Point point1, point2, point3, point4;
-
-		//(0,0); (l,0); (l, l); (0, l)
+	case SQUARE: //(0,0); (l,0); (l, l); (0, l)
 		point1.x = point1.y = point2.y = point4.x = 0;
-		point2.x = point3.x = point3.y = point4.y = side_length_;
+		point2.x = point3.x = point3.y = point4.y = side_length;
 
 		points = {point1, point2, point3, point4};
-		break;
-
-	default: // NO FORMATION
-		break;
 	}
+
+	return points;
+}
+
+void
+ReynoldRulesNode::formation_control_setup()
+{
+//  Sets up everything neccesary for formation protocol if it is activated
+	int formation_type; float side_length;
+
+	this->declare_parameter("formation_type", NONE);
+	this->declare_parameter("side_length", 0);
+
+	this->get_parameter("formation_type", formation_type);
+	this->get_parameter("side_length", side_length);
+
+	// No creating points vector if not neccessary
+	if (formation_type == NONE) {return;}
+
+	RCLCPP_INFO(get_logger(), "formation type: %s\nside length: %s",
+				std::to_string(formation_type).c_str(),
+				std::to_string(side_length).c_str());
+
+	formation_points_ = get_figure_points(formation_type, side_length);
+}
+
+std::vector<geometry_msgs::msg::Vector3>
+ReynoldRulesNode::formation_control()
+{
+
+	formation_matrix_
+	//this->paths_.clear();
+
+	for (int i = 0; i < NUMBER_DRONES; i++) {
+		for (int j = 0; j < NUMBER_DRONES; j++) {
+			const auto a_ij = topology_.at(i).at(j);
+			geometry_msgs::msg::Vector3 sender, vector;
+			sender.x = robots_[j]->pose.pose.position.x - robots_[i]->pose.pose.position.x;
+			sender.y = robots_[j]->pose.pose.position.y - robots_[i]->pose.pose.position.y;
+
+			vector.x = a_ij * sender.x + 
+			vector.y = a_ij * sender.y + 
+
+		}
+
+		// // update the robot's navigation to x
+		// auto path = findPathThroughWaypoints(robots_[i]->pose.pose.position, x);
+		// path.push_back(x);
+		// this->paths_.emplace_back(path);
+	}
+
+
 }
 
 } //  namespace reynold_rules

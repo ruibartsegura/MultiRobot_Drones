@@ -7,13 +7,20 @@
     DIST_THRESHOLD: 0.4
     navigation_method: "RosParam"
     topology: "0,1,1,1;0,0,0,0;0,0,0,0;0,0,0,0"
-    separation_weight_: 1.0
-    cohesion_weight_: 1.0
+    separation_weight_: 0.0
+    cohesion_weight_: 0.0
     alignment_weight_: 0.0
-    nav2point_weight_: 0.0
+    nav2point_weight_: 0.5
     obstacle_avoidance_weight_: 0.0
     formation_weight: 0.0
     MAX_VEL_DIFF_FACTOR: 0.4
     formation_type: 0 # 1->None, 2->line, 3->triangle, 4->square
     side_length: 1.0
     view_range_: 0.4
+    view_angle_: 0.4
+    view_split_: 0.4
+    target_point: [4.0, -4.0, 0.5]
+
+  
+	declare_parameter("_", _);
+	get_parameter("_", _);

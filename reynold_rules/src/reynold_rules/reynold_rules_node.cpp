@@ -104,6 +104,21 @@ ReynoldRulesNode::ReynoldRulesNode()
 	//formation_control_setup();
 
 	// Parameters
+	declare_parameter("NUMBER_DRONES", NUMBER_DRONES);
+	get_parameter("NUMBER_DRONES", NUMBER_DRONES);
+
+	declare_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
+	get_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
+
+	declare_parameter("MAX_LIN_VEL", MAX_LIN_VEL);
+	get_parameter("MAX_LIN_VEL", MAX_LIN_VEL);
+		
+	declare_parameter("DIST_THRESHOLD", DIST_THRESHOLD);
+	get_parameter("DIST_THRESHOLD", DIST_THRESHOLD);
+
+	declare_parameter("MAX_VEL_DIFF_FACTOR", MAX_VEL_DIFF_FACTOR);
+	get_parameter("MAX_VEL_DIFF_FACTOR", MAX_VEL_DIFF_FACTOR);
+	
 	declare_parameter("view_range", view_range_);
 	get_parameter("view_range", view_range_);
 	
@@ -128,8 +143,19 @@ ReynoldRulesNode::ReynoldRulesNode()
 	declare_parameter("nav2point_weight_", nav2point_weight_);
 	get_parameter("nav2point_weight_", nav2point_weight_);
 	
-	declare_parameter("DIST_THRESHOLD", DIST_THRESHOLD);
-	get_parameter("DIST_THRESHOLD", DIST_THRESHOLD);
+	this->declare_parameter<std::vector<double>>("target_point", {0.0, 0.0, 0.0});
+
+	// Obtener el parámetro y convertirlo a geometry_msgs::msg::Point
+	std::vector<double> target_point_vec;
+	this->get_parameter("target_point", target_point_vec);
+
+	if (target_point_vec.size() == 3) {
+		target_point_.x = target_point_vec[0];
+		target_point_.y = target_point_vec[1];
+		target_point_.z = target_point_vec[2];
+		RCLCPP_INFO(this->get_logger(), "Target point initialized: x=%.2f, y=%.2f, z=%.2f",
+					target_point_.x, target_point_.y, target_point_.z);
+	}
 
 	// List of waypoint to de nav_2_point
 	for (int x = -4; x <= 4; x += 2) {
@@ -144,8 +170,6 @@ ReynoldRulesNode::ReynoldRulesNode()
 	std::string navigationMethod;
 	declare_parameter("navigation_method", navigationMethod);
 	get_parameter("navigation_method", navigationMethod);
-
-	navigationMethod_ = NavigationMethod::Rendezvous;
 
 	std::string topology;
 	declare_parameter("topology", topology);
@@ -193,10 +217,9 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 	int drone_number = std::stoi(number);
 
 	robots_[drone_number - 1] = data;
-
+	// std::cout << "H " << data->pose.pose.position.z << std::endl;
   	if (data->pose.pose.position.z > 0.3) {
 		READY = true;
-		std::cout << "H" << data->pose.pose.position.z << std::endl;
 	}
 }
 
@@ -263,13 +286,6 @@ ReynoldRulesNode::separation_rule()
     geometry_msgs::msg::Vector3 vec = calc_sep_vector(this->robots_[i]->pose.pose.position, i);
     separation_vectors.push_back(vec); // Agregar al vector del mensaje
   }
-  
-  // // Imprimir los valores de separation_vectors
-  // std::cout << "Separation vectors:" << std::endl;
-  // for (size_t i = 0; i < separation_vectors.size(); ++i) {
-  //     const auto &vec = separation_vectors[i];
-  //     std::cout << "Drone " << i << ": x=" << vec.x << ", y=" << vec.y << ", z=" << vec.z << std::endl;
-  // }
   
   return separation_vectors;
 }
@@ -439,6 +455,9 @@ ReynoldRulesNode::recalculatePath()
 	start.x /= this->NUMBER_DRONES;
 	start.y /= this->NUMBER_DRONES;
 
+	std::cout << "Start x" << start.x << std::endl;
+	std::cout << "Start y" << start.y << std::endl;
+
 	// Encontrar el waypoint más cercano al inicio y al objetivo
 	double dist = -1; // Inicializar con el valor máximo de double
 	geometry_msgs::msg::Point closer_2_start;
@@ -453,16 +472,21 @@ ReynoldRulesNode::recalculatePath()
 	dist = -1; // Restart the calue of dist
 	geometry_msgs::msg::Point closer_2_target;
 	for (const auto& wp : this->waypoints_) {              // Iterar sobre la lista de waypoints
-		double current_dist = get_distance(start, wp); // Calcular la distancia actual
+		double current_dist = get_distance(target_point_, wp); // Calcular la distancia actual
 		if (current_dist < dist || dist < 0) {
 			dist            = current_dist;
 			closer_2_target = wp; // Actualizar el punto más cercano
 		}
 	}
 
+	std::cout << "Close start x" << closer_2_start.x << std::endl;
+	std::cout << "Close start y" << closer_2_start.y << std::endl;
+	std::cout << "Close target x" << closer_2_target.x << std::endl;
+	std::cout << "Close target y" << closer_2_target.y << std::endl;
+
 	// Encontrar el camino a través de los waypoints
 	this->path_ = findPathThroughWaypoints(closer_2_start, closer_2_target);
-	this->path_.push_back(this->target_point); // Añadir el punto objetivo al camino
+	this->path_.push_back(this->target_point_); // Añadir el punto objetivo al camino
 
 	if (!this->path_.empty()) {
 		RCLCPP_INFO(this->get_logger(), "Ruta encontrada:");
@@ -561,10 +585,11 @@ ReynoldRulesNode::nav_2_point_rule()
 
 	if (this->navigationMethod_ == NavigationMethod::RosParam) {
 		// Verificar si hay un nuevo punto objetivo
-		if (this->target_point.x != this->prev_point.x ||
-		    this->target_point.y != this->prev_point.y) {
+		if (this->target_point_.x != this->prev_point.x ||
+		    this->target_point_.y != this->prev_point.y) {
+			std::cout << "Primer Calculo ruta" << std::endl;
 			recalculatePath();
-			this->prev_point = this->target_point;
+			this->prev_point = this->target_point_;
 		}
 
 		RCLCPP_INFO(get_logger(), "nav_2_point_rule: 1");
@@ -573,13 +598,15 @@ ReynoldRulesNode::nav_2_point_rule()
 		for (const auto& robot : this->robots_) {
 			average_position.x += robot->pose.pose.position.x;
 			average_position.y += robot->pose.pose.position.y;
+			average_position.z += robot->pose.pose.position.z;
 		}
 		average_position.x /= this->NUMBER_DRONES;
 		average_position.y /= this->NUMBER_DRONES;
+		average_position.z /= this->NUMBER_DRONES;
 
-		RCLCPP_INFO(get_logger(), "nav_2_point_rule: 2");
+		RCLCPP_WARN(get_logger(), "nav_2_point_rule: 2");
 		if (get_distance(average_position, this->path_.front()) < this->DIST_THRESHOLD) {
-			if (this->path_.front() != this->target_point) {
+			if (this->path_.front() != this->target_point_) {
 				this->path_.erase(this->path_.begin()); // Eliminar waypoint del camino
 			}
 		}
@@ -595,6 +622,7 @@ ReynoldRulesNode::nav_2_point_rule()
 		}
 		RCLCPP_INFO(get_logger(), "end");
 	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
+		RCLCPP_WARN(this->get_logger(), "Rendezvous");
 		rendezvous_protocol();
 
 		if (this->paths_.size() != this->robots_.size()) {
@@ -739,18 +767,18 @@ ReynoldRulesNode::control_cycle()
 {
 	if (READY) {
 		std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
-		        separation_rule(),
+		        // separation_rule(),
 		        // aligment_rule(),
-		        cohesion_rule(),
-		        //nav_2_point_rule(),
+		        // cohesion_rule(),
+		        nav_2_point_rule(),
 		        // avoidance_rule()
 		};
 
 		std::vector<double> weights = {
-		        separation_weight_,
-				//nav2point_weight_,
+		        // separation_weight_,
+				nav2point_weight_,
 		        // obstacle_avoidance_weight_,
-		        cohesion_weight_,
+		        // cohesion_weight_,
 		        // alignment_weight_
 		};
 
@@ -780,11 +808,14 @@ ReynoldRulesNode::control_cycle()
 			vel.linear.y = std::min(linear_mult_ * total_vector.y, MAX_LIN_VEL);
 	
 			// Imprimir los valores de velocidad de los drones
-			std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
-			          << ", y=" << vel.linear.y << std::endl;
+			// std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
+			//           << ", y=" << vel.linear.y << std::endl;
 
 			publishers_[i]->publish(vel);
 		}
+	} else {
+		std::cout << "No empieza" << std::endl;
+
 	}
 }
 
@@ -887,7 +918,6 @@ void
 ReynoldRulesNode::set_formation_matrix(
 	std::vector<geometry_msgs::msg::Point> formation_points)
 {
-	std::cout << "PASO 1.1" << std::endl;
 	// Set matrix initially to all 0
 	formation_matrix_ = {NUMBER_DRONES, std::vector<geometry_msgs::msg::Point>(NUMBER_DRONES)};
 
@@ -898,7 +928,6 @@ ReynoldRulesNode::set_formation_matrix(
 			formation_matrix_[i][j].y = formation_points[j].y - formation_points[i].y;
 		}
 	}
-	std::cout << "PASO 1.2" << std::endl;
 }
 
 void

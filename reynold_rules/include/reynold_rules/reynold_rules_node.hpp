@@ -113,7 +113,7 @@ private:
 												std::optional<double> max_length = std::nullopt);
 
 	NavigationMethod navigationMethod_{NavigationMethod::RosParam};
-	geometry_msgs::msg::Point target_point;
+	geometry_msgs::msg::Point target_point_;
 	geometry_msgs::msg::Point prev_point;
 	std::vector<geometry_msgs::msg::Point> waypoints_;
 	std::vector<geometry_msgs::msg::Point> path_;

@@ -12,10 +12,10 @@
     alignment_weight_: 0.0
     nav2point_weight_: 0.5
     obstacle_avoidance_weight_: 0.0
-    formation_weight: 0.0
+    formation_weight: 0.5
     MAX_VEL_DIFF_FACTOR: 0.4
     formation_type: 0 # 1->None, 2->line, 3->triangle, 4->square
-    side_length: 1.0
+    side_length: 1.5
     view_range_: 0.4
     view_angle_: 0.4
     view_split_: 0.4

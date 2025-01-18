@@ -48,6 +48,7 @@ private:
 	double MAX_LIN_VEL{1};
 	double MIN_LIN_VEL{0.0};
 	double DIST_THRESHOLD{1};
+	double HEIGHT{0.3};
 
 	double separation_weight_{1.0};
 	double cohesion_weight_{0.0};
@@ -63,8 +64,9 @@ private:
 	static const int TRIANGLE = 3;
 	static const int SQUARE = 4;
 
+	float side_length_;
 	std::vector<std::vector<geometry_msgs::msg::Point>> formation_matrix_;
-	std::vector<geometry_msgs::msg::Point> get_formation_points(int, float);
+	std::vector<geometry_msgs::msg::Point> get_formation_points();
 	void set_formation_matrix(std::vector<geometry_msgs::msg::Point>);
 
 

@@ -1,0 +1,255 @@
+[0.000000] (-) TimerEvent: {}
+[0.000368] (reynold_rules) JobQueued: {'identifier': 'reynold_rules', 'dependencies': OrderedDict()}
+[0.000505] (reynold_rules) JobStarted: {'identifier': 'reynold_rules'}
+[0.008366] (reynold_rules) JobProgress: {'identifier': 'reynold_rules', 'progress': 'cmake'}
+[0.008781] (reynold_rules) Command: {'cmd': ['/usr/bin/cmake', '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/reynold_rules', '-DCMAKE_INSTALL_PREFIX=/root/CrazySim/ros2_ws/src/MultiRobot_Drones/install'], 'cwd': '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules', 'env': OrderedDict([('DOCKER_BUILDKIT', '1'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('GIT_SSH_COMMAND', 'ssh -v'), ('HOSTNAME', 'rui'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/CrazySim/ros2_ws/install/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib::/root/acados/lib'), ('ACADOS_SOURCE_DIR', '/root/acados'), ('HOME', '/root'), ('OLDPWD', '/root/CrazySim/ros2_ws/src'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/CrazySim/ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('NVIDIA_DRIVER_CAPABILITIES', 'graphics,utility,compute'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '1'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS2_DISTRO', 'humble'), ('SSH_AUTH_SOCK', '/ssh-agent'), ('ROS_DOMAIN_ID', '70'), ('AMENT_PREFIX_PATH', '/root/CrazySim/ros2_ws/install:/opt/ros/humble'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('PWD', '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules'), ('GZ_RELEASE', 'garden'), ('LC_AL', 'C.UTF-8'), ('PYTHONPATH', '/root/CrazySim/ros2_ws/install/lib/python3.10/site-packages:/root/CrazySim/ros2_ws/install/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('NVIDIA_VISIBLE_DEVICES', 'all'), ('TZ', 'Europe/Zagreb'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/CrazySim/ros2_ws/install:/opt/ros/humble')]), 'shell': False}
+[0.099814] (-) TimerEvent: {}
+[0.100076] (reynold_rules) StdoutLine: {'line': b'-- The C compiler identification is GNU 11.4.0\n'}
+[0.155013] (reynold_rules) StdoutLine: {'line': b'-- The CXX compiler identification is GNU 11.4.0\n'}
+[0.162821] (reynold_rules) StdoutLine: {'line': b'-- Detecting C compiler ABI info\n'}
+[0.199932] (-) TimerEvent: {}
+[0.225743] (reynold_rules) StdoutLine: {'line': b'-- Detecting C compiler ABI info - done\n'}
+[0.244464] (reynold_rules) StdoutLine: {'line': b'-- Check for working C compiler: /usr/bin/cc - skipped\n'}
+[0.244784] (reynold_rules) StdoutLine: {'line': b'-- Detecting C compile features\n'}
+[0.245467] (reynold_rules) StdoutLine: {'line': b'-- Detecting C compile features - done\n'}
+[0.248402] (reynold_rules) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info\n'}
+[0.300052] (-) TimerEvent: {}
+[0.318487] (reynold_rules) StdoutLine: {'line': b'-- Detecting CXX compiler ABI info - done\n'}
+[0.327654] (reynold_rules) StdoutLine: {'line': b'-- Check for working CXX compiler: /usr/bin/c++ - skipped\n'}
+[0.327921] (reynold_rules) StdoutLine: {'line': b'-- Detecting CXX compile features\n'}
+[0.328379] (reynold_rules) StdoutLine: {'line': b'-- Detecting CXX compile features - done\n'}
+[0.333966] (reynold_rules) StdoutLine: {'line': b'-- Found ament_cmake: 1.3.11 (/opt/ros/humble/share/ament_cmake/cmake)\n'}
+[0.400163] (-) TimerEvent: {}
+[0.500362] (-) TimerEvent: {}
+[0.506283] (reynold_rules) StdoutLine: {'line': b'-- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter \n'}
+[0.592589] (reynold_rules) StdoutLine: {'line': b'-- Found rclcpp: 16.0.11 (/opt/ros/humble/share/rclcpp/cmake)\n'}
+[0.600422] (-) TimerEvent: {}
+[0.632927] (reynold_rules) StdoutLine: {'line': b'-- Found rosidl_generator_c: 3.1.6 (/opt/ros/humble/share/rosidl_generator_c/cmake)\n'}
+[0.637705] (reynold_rules) StdoutLine: {'line': b'-- Found rosidl_adapter: 3.1.6 (/opt/ros/humble/share/rosidl_adapter/cmake)\n'}
+[0.645511] (reynold_rules) StdoutLine: {'line': b'-- Found rosidl_generator_cpp: 3.1.6 (/opt/ros/humble/share/rosidl_generator_cpp/cmake)\n'}
+[0.657246] (reynold_rules) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_c: rosidl_typesupport_fastrtps_c;rosidl_typesupport_introspection_c\n'}
+[0.672941] (reynold_rules) StdoutLine: {'line': b'-- Using all available rosidl_typesupport_cpp: rosidl_typesupport_fastrtps_cpp;rosidl_typesupport_introspection_cpp\n'}
+[0.700495] (-) TimerEvent: {}
+[0.717078] (reynold_rules) StdoutLine: {'line': b'-- Found rmw_implementation_cmake: 6.1.2 (/opt/ros/humble/share/rmw_implementation_cmake/cmake)\n'}
+[0.719706] (reynold_rules) StdoutLine: {'line': b'-- Found rmw_fastrtps_cpp: 6.2.7 (/opt/ros/humble/share/rmw_fastrtps_cpp/cmake)\n'}
+[0.800594] (-) TimerEvent: {}
+[0.801096] (reynold_rules) StdoutLine: {'line': b'-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version "3.0.2")  \n'}
+[0.830447] (reynold_rules) StdoutLine: {'line': b'-- Found FastRTPS: /opt/ros/humble/include  \n'}
+[0.875273] (reynold_rules) StdoutLine: {'line': b"-- Using RMW implementation 'rmw_fastrtps_cpp' as default\n"}
+[0.883745] (reynold_rules) StdoutLine: {'line': b'-- Looking for pthread.h\n'}
+[0.900684] (-) TimerEvent: {}
+[0.946170] (reynold_rules) StdoutLine: {'line': b'-- Looking for pthread.h - found\n'}
+[0.946592] (reynold_rules) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n'}
+[1.000774] (-) TimerEvent: {}
+[1.009752] (reynold_rules) StdoutLine: {'line': b'-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n'}
+[1.010725] (reynold_rules) StdoutLine: {'line': b'-- Found Threads: TRUE  \n'}
+[1.061751] (reynold_rules) StdoutLine: {'line': b'-- Found geometry_msgs: 4.2.4 (/opt/ros/humble/share/geometry_msgs/cmake)\n'}
+[1.075301] (reynold_rules) StdoutLine: {'line': b'-- Found nav_msgs: 4.2.4 (/opt/ros/humble/share/nav_msgs/cmake)\n'}
+[1.100850] (-) TimerEvent: {}
+[1.157798] (reynold_rules) StdoutLine: {'line': b'-- Configuring done\n'}
+[1.170045] (reynold_rules) StdoutLine: {'line': b'-- Generating done\n'}
+[1.175023] (reynold_rules) StdoutLine: {'line': b'-- Build files have been written to: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules\n'}
+[1.182111] (reynold_rules) CommandEnded: {'returncode': 0}
+[1.182621] (reynold_rules) JobProgress: {'identifier': 'reynold_rules', 'progress': 'build'}
+[1.183766] (reynold_rules) Command: {'cmd': ['/usr/bin/cmake', '--build', '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules', '--', '-j8', '-l8'], 'cwd': '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules', 'env': OrderedDict([('DOCKER_BUILDKIT', '1'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('GIT_SSH_COMMAND', 'ssh -v'), ('HOSTNAME', 'rui'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/CrazySim/ros2_ws/install/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib::/root/acados/lib'), ('ACADOS_SOURCE_DIR', '/root/acados'), ('HOME', '/root'), ('OLDPWD', '/root/CrazySim/ros2_ws/src'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/CrazySim/ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('NVIDIA_DRIVER_CAPABILITIES', 'graphics,utility,compute'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '1'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS2_DISTRO', 'humble'), ('SSH_AUTH_SOCK', '/ssh-agent'), ('ROS_DOMAIN_ID', '70'), ('AMENT_PREFIX_PATH', '/root/CrazySim/ros2_ws/install:/opt/ros/humble'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('PWD', '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules'), ('GZ_RELEASE', 'garden'), ('LC_AL', 'C.UTF-8'), ('PYTHONPATH', '/root/CrazySim/ros2_ws/install/lib/python3.10/site-packages:/root/CrazySim/ros2_ws/install/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('NVIDIA_VISIBLE_DEVICES', 'all'), ('TZ', 'Europe/Zagreb'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/CrazySim/ros2_ws/install:/opt/ros/humble')]), 'shell': False}
+[1.200978] (-) TimerEvent: {}
+[1.226645] (reynold_rules) StdoutLine: {'line': b'[ 25%] \x1b[32mBuilding CXX object CMakeFiles/reynold_rules.dir/src/reynold_rules/reynold_rules_node.cpp.o\x1b[0m\n'}
+[1.301095] (-) TimerEvent: {}
+[1.401361] (-) TimerEvent: {}
+[1.501630] (-) TimerEvent: {}
+[1.601900] (-) TimerEvent: {}
+[1.702168] (-) TimerEvent: {}
+[1.802428] (-) TimerEvent: {}
+[1.902697] (-) TimerEvent: {}
+[2.002957] (-) TimerEvent: {}
+[2.103290] (-) TimerEvent: {}
+[2.203581] (-) TimerEvent: {}
+[2.303849] (-) TimerEvent: {}
+[2.404127] (-) TimerEvent: {}
+[2.504390] (-) TimerEvent: {}
+[2.604630] (-) TimerEvent: {}
+[2.704899] (-) TimerEvent: {}
+[2.805169] (-) TimerEvent: {}
+[2.905427] (-) TimerEvent: {}
+[3.005716] (-) TimerEvent: {}
+[3.106009] (-) TimerEvent: {}
+[3.206331] (-) TimerEvent: {}
+[3.306630] (-) TimerEvent: {}
+[3.406905] (-) TimerEvent: {}
+[3.507185] (-) TimerEvent: {}
+[3.576001] (reynold_rules) StderrLine: {'line': b'\x1b[01m\x1b[K/root/CrazySim/ros2_ws/src/MultiRobot_Drones/reynold_rules/src/reynold_rules/reynold_rules_node.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kstd::vector<geometry_msgs::msg::Vector3_<std::allocator<void> > > reynold_rules::ReynoldRulesNode::cohesion_rule()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[3.576175] (reynold_rules) StderrLine: {'line': b'\x1b[01m\x1b[K/root/CrazySim/ros2_ws/src/MultiRobot_Drones/reynold_rules/src/reynold_rules/reynold_rules_node.cpp:254:1:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kno return statement in function returning non-void [\x1b[01;35m\x1b[K\x1b]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wreturn-type\x07-Wreturn-type\x1b]8;;\x07\x1b[m\x1b[K]\n'}
+[3.576247] (reynold_rules) StderrLine: {'line': b'  254 | \x1b[01;35m\x1b[K}\x1b[m\x1b[K\n'}
+[3.576319] (reynold_rules) StderrLine: {'line': b'      | \x1b[01;35m\x1b[K^\x1b[m\x1b[K\n'}
+[3.607325] (-) TimerEvent: {}
+[3.612392] (reynold_rules) StderrLine: {'line': b'\x1b[01m\x1b[K/root/CrazySim/ros2_ws/src/MultiRobot_Drones/reynold_rules/src/reynold_rules/reynold_rules_node.cpp:\x1b[m\x1b[K In member function \xe2\x80\x98\x1b[01m\x1b[Kstd::vector<geometry_msgs::msg::Vector3_<std::allocator<void> > > reynold_rules::ReynoldRulesNode::avoidance_rule()\x1b[m\x1b[K\xe2\x80\x99:\n'}
+[3.612564] (reynold_rules) StderrLine: {'line': b'\x1b[01m\x1b[K/root/CrazySim/ros2_ws/src/MultiRobot_Drones/reynold_rules/src/reynold_rules/reynold_rules_node.cpp:520:1:\x1b[m\x1b[K \x1b[01;35m\x1b[Kwarning: \x1b[m\x1b[Kno return statement in function returning non-void [\x1b[01;35m\x1b[K\x1b]8;;https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wreturn-type\x07-Wreturn-type\x1b]8;;\x07\x1b[m\x1b[K]\n'}
+[3.612633] (reynold_rules) StderrLine: {'line': b'  520 | \x1b[01;35m\x1b[K}\x1b[m\x1b[K\n'}
+[3.612689] (reynold_rules) StderrLine: {'line': b'      | \x1b[01;35m\x1b[K^\x1b[m\x1b[K\n'}
+[3.707417] (-) TimerEvent: {}
+[3.807655] (-) TimerEvent: {}
+[3.907925] (-) TimerEvent: {}
+[4.008163] (-) TimerEvent: {}
+[4.108424] (-) TimerEvent: {}
+[4.208706] (-) TimerEvent: {}
+[4.308997] (-) TimerEvent: {}
+[4.409268] (-) TimerEvent: {}
+[4.509609] (-) TimerEvent: {}
+[4.609896] (-) TimerEvent: {}
+[4.710166] (-) TimerEvent: {}
+[4.810472] (-) TimerEvent: {}
+[4.910786] (-) TimerEvent: {}
+[5.011104] (-) TimerEvent: {}
+[5.111400] (-) TimerEvent: {}
+[5.211725] (-) TimerEvent: {}
+[5.311973] (-) TimerEvent: {}
+[5.412246] (-) TimerEvent: {}
+[5.512507] (-) TimerEvent: {}
+[5.612784] (-) TimerEvent: {}
+[5.713058] (-) TimerEvent: {}
+[5.813355] (-) TimerEvent: {}
+[5.913631] (-) TimerEvent: {}
+[6.013875] (-) TimerEvent: {}
+[6.114118] (-) TimerEvent: {}
+[6.214392] (-) TimerEvent: {}
+[6.314665] (-) TimerEvent: {}
+[6.414941] (-) TimerEvent: {}
+[6.515232] (-) TimerEvent: {}
+[6.615501] (-) TimerEvent: {}
+[6.715771] (-) TimerEvent: {}
+[6.816053] (-) TimerEvent: {}
+[6.916344] (-) TimerEvent: {}
+[7.016654] (-) TimerEvent: {}
+[7.116989] (-) TimerEvent: {}
+[7.217291] (-) TimerEvent: {}
+[7.317596] (-) TimerEvent: {}
+[7.417948] (-) TimerEvent: {}
+[7.518287] (-) TimerEvent: {}
+[7.618581] (-) TimerEvent: {}
+[7.718847] (-) TimerEvent: {}
+[7.819243] (-) TimerEvent: {}
+[7.919519] (-) TimerEvent: {}
+[8.019823] (-) TimerEvent: {}
+[8.120133] (-) TimerEvent: {}
+[8.220446] (-) TimerEvent: {}
+[8.320741] (-) TimerEvent: {}
+[8.421035] (-) TimerEvent: {}
+[8.521340] (-) TimerEvent: {}
+[8.621630] (-) TimerEvent: {}
+[8.721925] (-) TimerEvent: {}
+[8.822225] (-) TimerEvent: {}
+[8.922539] (-) TimerEvent: {}
+[9.022836] (-) TimerEvent: {}
+[9.123132] (-) TimerEvent: {}
+[9.223443] (-) TimerEvent: {}
+[9.323736] (-) TimerEvent: {}
+[9.424027] (-) TimerEvent: {}
+[9.524334] (-) TimerEvent: {}
+[9.624680] (-) TimerEvent: {}
+[9.725025] (-) TimerEvent: {}
+[9.825376] (-) TimerEvent: {}
+[9.925754] (-) TimerEvent: {}
+[10.026141] (-) TimerEvent: {}
+[10.126522] (-) TimerEvent: {}
+[10.226818] (-) TimerEvent: {}
+[10.327113] (-) TimerEvent: {}
+[10.427347] (-) TimerEvent: {}
+[10.527627] (-) TimerEvent: {}
+[10.627885] (-) TimerEvent: {}
+[10.728149] (-) TimerEvent: {}
+[10.828413] (-) TimerEvent: {}
+[10.928675] (-) TimerEvent: {}
+[11.028936] (-) TimerEvent: {}
+[11.129194] (-) TimerEvent: {}
+[11.229431] (-) TimerEvent: {}
+[11.329696] (-) TimerEvent: {}
+[11.429928] (-) TimerEvent: {}
+[11.530187] (-) TimerEvent: {}
+[11.630464] (-) TimerEvent: {}
+[11.730695] (-) TimerEvent: {}
+[11.830973] (-) TimerEvent: {}
+[11.931288] (-) TimerEvent: {}
+[12.031530] (-) TimerEvent: {}
+[12.131792] (-) TimerEvent: {}
+[12.232058] (-) TimerEvent: {}
+[12.332330] (-) TimerEvent: {}
+[12.432609] (-) TimerEvent: {}
+[12.532877] (-) TimerEvent: {}
+[12.633147] (-) TimerEvent: {}
+[12.733433] (-) TimerEvent: {}
+[12.833702] (-) TimerEvent: {}
+[12.934012] (-) TimerEvent: {}
+[13.034319] (-) TimerEvent: {}
+[13.103886] (reynold_rules) StdoutLine: {'line': b'[ 50%] \x1b[32m\x1b[1mLinking CXX shared library libreynold_rules.so\x1b[0m\n'}
+[13.134408] (-) TimerEvent: {}
+[13.234684] (-) TimerEvent: {}
+[13.334980] (-) TimerEvent: {}
+[13.435271] (-) TimerEvent: {}
+[13.535524] (-) TimerEvent: {}
+[13.635801] (-) TimerEvent: {}
+[13.733347] (reynold_rules) StdoutLine: {'line': b'[ 50%] Built target reynold_rules\n'}
+[13.735867] (-) TimerEvent: {}
+[13.752005] (reynold_rules) StdoutLine: {'line': b'[ 75%] \x1b[32mBuilding CXX object CMakeFiles/reynold_rules_node.dir/src/reynold_rules_main.cpp.o\x1b[0m\n'}
+[13.835994] (-) TimerEvent: {}
+[13.936255] (-) TimerEvent: {}
+[14.036497] (-) TimerEvent: {}
+[14.136735] (-) TimerEvent: {}
+[14.237004] (-) TimerEvent: {}
+[14.337275] (-) TimerEvent: {}
+[14.437527] (-) TimerEvent: {}
+[14.537767] (-) TimerEvent: {}
+[14.637997] (-) TimerEvent: {}
+[14.738268] (-) TimerEvent: {}
+[14.838529] (-) TimerEvent: {}
+[14.938799] (-) TimerEvent: {}
+[15.039074] (-) TimerEvent: {}
+[15.139348] (-) TimerEvent: {}
+[15.239622] (-) TimerEvent: {}
+[15.339866] (-) TimerEvent: {}
+[15.440144] (-) TimerEvent: {}
+[15.540417] (-) TimerEvent: {}
+[15.640721] (-) TimerEvent: {}
+[15.740998] (-) TimerEvent: {}
+[15.841269] (-) TimerEvent: {}
+[15.941555] (-) TimerEvent: {}
+[16.041834] (-) TimerEvent: {}
+[16.142077] (-) TimerEvent: {}
+[16.242354] (-) TimerEvent: {}
+[16.342598] (-) TimerEvent: {}
+[16.442919] (-) TimerEvent: {}
+[16.525565] (reynold_rules) StdoutLine: {'line': b'[100%] \x1b[32m\x1b[1mLinking CXX executable reynold_rules_node\x1b[0m\n'}
+[16.543047] (-) TimerEvent: {}
+[16.643417] (-) TimerEvent: {}
+[16.743688] (-) TimerEvent: {}
+[16.749333] (reynold_rules) StdoutLine: {'line': b'[100%] Built target reynold_rules_node\n'}
+[16.760445] (reynold_rules) CommandEnded: {'returncode': 0}
+[16.761019] (reynold_rules) JobProgress: {'identifier': 'reynold_rules', 'progress': 'install'}
+[16.769460] (reynold_rules) Command: {'cmd': ['/usr/bin/cmake', '--install', '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules'], 'cwd': '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules', 'env': OrderedDict([('DOCKER_BUILDKIT', '1'), ('LESSOPEN', '| /usr/bin/lesspipe %s'), ('GIT_SSH_COMMAND', 'ssh -v'), ('HOSTNAME', 'rui'), ('SHLVL', '1'), ('LD_LIBRARY_PATH', '/root/CrazySim/ros2_ws/install/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib::/root/acados/lib'), ('ACADOS_SOURCE_DIR', '/root/acados'), ('HOME', '/root'), ('OLDPWD', '/root/CrazySim/ros2_ws/src'), ('ROS_PYTHON_VERSION', '3'), ('COLCON_PREFIX_PATH', '/root/CrazySim/ros2_ws/install'), ('ROS_DISTRO', 'humble'), ('_', '/usr/bin/colcon'), ('ROS_VERSION', '2'), ('NVIDIA_DRIVER_CAPABILITIES', 'graphics,utility,compute'), ('TERM', 'xterm-256color'), ('ROS_LOCALHOST_ONLY', '1'), ('QT_X11_NO_MITSHM', '1'), ('PATH', '/opt/ros/humble/bin:/root/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin'), ('DISPLAY', ':1'), ('LANG', 'C.UTF-8'), ('LS_COLORS', 'rs=0:di=01;34:ln=01;36:mh=00:pi=40;33:so=01;35:do=01;35:bd=40;33;01:cd=40;33;01:or=40;31;01:mi=00:su=37;41:sg=30;43:ca=30;41:tw=30;42:ow=34;42:st=37;44:ex=01;32:*.tar=01;31:*.tgz=01;31:*.arc=01;31:*.arj=01;31:*.taz=01;31:*.lha=01;31:*.lz4=01;31:*.lzh=01;31:*.lzma=01;31:*.tlz=01;31:*.txz=01;31:*.tzo=01;31:*.t7z=01;31:*.zip=01;31:*.z=01;31:*.dz=01;31:*.gz=01;31:*.lrz=01;31:*.lz=01;31:*.lzo=01;31:*.xz=01;31:*.zst=01;31:*.tzst=01;31:*.bz2=01;31:*.bz=01;31:*.tbz=01;31:*.tbz2=01;31:*.tz=01;31:*.deb=01;31:*.rpm=01;31:*.jar=01;31:*.war=01;31:*.ear=01;31:*.sar=01;31:*.rar=01;31:*.alz=01;31:*.ace=01;31:*.zoo=01;31:*.cpio=01;31:*.7z=01;31:*.rz=01;31:*.cab=01;31:*.wim=01;31:*.swm=01;31:*.dwm=01;31:*.esd=01;31:*.jpg=01;35:*.jpeg=01;35:*.mjpg=01;35:*.mjpeg=01;35:*.gif=01;35:*.bmp=01;35:*.pbm=01;35:*.pgm=01;35:*.ppm=01;35:*.tga=01;35:*.xbm=01;35:*.xpm=01;35:*.tif=01;35:*.tiff=01;35:*.png=01;35:*.svg=01;35:*.svgz=01;35:*.mng=01;35:*.pcx=01;35:*.mov=01;35:*.mpg=01;35:*.mpeg=01;35:*.m2v=01;35:*.mkv=01;35:*.webm=01;35:*.webp=01;35:*.ogm=01;35:*.mp4=01;35:*.m4v=01;35:*.mp4v=01;35:*.vob=01;35:*.qt=01;35:*.nuv=01;35:*.wmv=01;35:*.asf=01;35:*.rm=01;35:*.rmvb=01;35:*.flc=01;35:*.avi=01;35:*.fli=01;35:*.flv=01;35:*.gl=01;35:*.dl=01;35:*.xcf=01;35:*.xwd=01;35:*.yuv=01;35:*.cgm=01;35:*.emf=01;35:*.ogv=01;35:*.ogx=01;35:*.aac=00;36:*.au=00;36:*.flac=00;36:*.m4a=00;36:*.mid=00;36:*.midi=00;36:*.mka=00;36:*.mp3=00;36:*.mpc=00;36:*.ogg=00;36:*.ra=00;36:*.wav=00;36:*.oga=00;36:*.opus=00;36:*.spx=00;36:*.xspf=00;36:'), ('ROS2_DISTRO', 'humble'), ('SSH_AUTH_SOCK', '/ssh-agent'), ('ROS_DOMAIN_ID', '70'), ('AMENT_PREFIX_PATH', '/root/CrazySim/ros2_ws/install:/opt/ros/humble'), ('LESSCLOSE', '/usr/bin/lesspipe %s %s'), ('PWD', '/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules'), ('GZ_RELEASE', 'garden'), ('LC_AL', 'C.UTF-8'), ('PYTHONPATH', '/root/CrazySim/ros2_ws/install/lib/python3.10/site-packages:/root/CrazySim/ros2_ws/install/local/lib/python3.10/dist-packages:/opt/ros/humble/lib/python3.10/site-packages:/opt/ros/humble/local/lib/python3.10/dist-packages'), ('NVIDIA_VISIBLE_DEVICES', 'all'), ('TZ', 'Europe/Zagreb'), ('COLCON', '1'), ('CMAKE_PREFIX_PATH', '/root/CrazySim/ros2_ws/install:/opt/ros/humble')]), 'shell': False}
+[16.777003] (reynold_rules) StdoutLine: {'line': b'-- Install configuration: ""\n'}
+[16.777141] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/launch\n'}
+[16.777242] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/launch/reynold_rules.launch.py\n'}
+[16.777458] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/config\n'}
+[16.777639] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/config/params.yaml\n'}
+[16.777773] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/lib/libreynold_rules.so\n'}
+[16.786542] (reynold_rules) StdoutLine: {'line': b'-- Set runtime path of "/root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/lib/libreynold_rules.so" to ""\n'}
+[16.786762] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/lib/reynold_rules/reynold_rules_node\n'}
+[16.787064] (reynold_rules) StdoutLine: {'line': b'-- Set runtime path of "/root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/lib/reynold_rules/reynold_rules_node" to ""\n'}
+[16.787182] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/ament_index/resource_index/package_run_dependencies/reynold_rules\n'}
+[16.787431] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/ament_index/resource_index/parent_prefix_path/reynold_rules\n'}
+[16.787626] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/environment/ament_prefix_path.sh\n'}
+[16.787798] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/environment/ament_prefix_path.dsv\n'}
+[16.787938] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/environment/path.sh\n'}
+[16.788029] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/environment/path.dsv\n'}
+[16.788159] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/local_setup.bash\n'}
+[16.788311] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/local_setup.sh\n'}
+[16.788507] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/local_setup.zsh\n'}
+[16.788656] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/local_setup.dsv\n'}
+[16.788832] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/package.dsv\n'}
+[16.788996] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/ament_index/resource_index/packages/reynold_rules\n'}
+[16.789143] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/cmake/ament_cmake_export_dependencies-extras.cmake\n'}
+[16.789297] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/cmake/reynold_rulesConfig.cmake\n'}
+[16.789472] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/cmake/reynold_rulesConfig-version.cmake\n'}
+[16.789603] (reynold_rules) StdoutLine: {'line': b'-- Installing: /root/CrazySim/ros2_ws/src/MultiRobot_Drones/install/share/reynold_rules/package.xml\n'}
+[16.791301] (reynold_rules) CommandEnded: {'returncode': 0}
+[16.808488] (reynold_rules) JobEnded: {'identifier': 'reynold_rules', 'rc': 0}
+[16.809136] (-) EventReactorShutdown: {}

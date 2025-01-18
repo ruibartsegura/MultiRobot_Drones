@@ -73,44 +73,44 @@ private:
 	// Pub and subs vectors
 	std::vector<rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr> publishers_;
 	std::vector<rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr> subscribers_;
-  static constexpr double ANGULAR_STEPSIZE {2 * (M_PI / 180.0)};
+	static constexpr double ANGULAR_STEPSIZE {2 * (M_PI / 180.0)};
 
 	// Map
 	nav_msgs::msg::OccupancyGrid::SharedPtr map_;
 
-  // Separation
-  double view_range_;
-  double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
-  geometry_msgs::msg::Vector3 calc_sep_vector(geometry_msgs::msg::Point position, int num);
+	// Separation
+	double view_range_{0.4};
+	//double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
+	geometry_msgs::msg::Vector3 calc_sep_vector(geometry_msgs::msg::Point position, int num);
 
-  // Alignment
-  geometry_msgs::msg::Vector3 calc_average_velocity();
+	// Alignment
+	geometry_msgs::msg::Vector3 calc_average_velocity();
 
-  // Cohesion
-  geometry_msgs::msg::Point calc_average_pos(std::vector<nav_msgs::msg::Odometry> positions);
-  geometry_msgs::msg::Vector3 calc_cohesion_vector(geometry_msgs::msg::Point robot_pos);
+	// Cohesion
+	geometry_msgs::msg::Point calc_average_pos(std::vector<nav_msgs::msg::Odometry> positions);
+	geometry_msgs::msg::Vector3 calc_cohesion_vector(geometry_msgs::msg::Point robot_pos);
 
-  // Obstacle avoidance
-  double view_angle_;
-  double view_split_;
-  bool map_lookup(geometry_msgs::msg::Point& pos);
-  std::vector<geometry_msgs::msg::Point> find_obstacles(const geometry_msgs::msg::Pose robot_pose);
-  geometry_msgs::msg::Vector3 sum_weighted_repellent_vectors(int robot_index);
+	// Obstacle avoidance
+	double view_angle_{0.4};
+	double view_split_{0.0};
+	bool map_lookup(geometry_msgs::msg::Point& pos);
+	std::vector<geometry_msgs::msg::Point> find_obstacles(const geometry_msgs::msg::Pose robot_pose);
+	geometry_msgs::msg::Vector3 sum_weighted_repellent_vectors(int robot_index);
 
 	// Nav_2_Point
 	void recalculatePath();
 	std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(
-	        const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target);
+			const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target);
 
 	std::vector<geometry_msgs::msg::Point> findNeighbors(
-	        const std::vector<geometry_msgs::msg::Point>& waypoints,
-	        const geometry_msgs::msg::Point& currentWp, int step = 2);
+			const std::vector<geometry_msgs::msg::Point>& waypoints,
+			const geometry_msgs::msg::Point& currentWp, int step = 2);
 
 	bool isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end);
 
 	geometry_msgs::msg::Vector3 vector_2_points(geometry_msgs::msg::Point point1,
-	                                            geometry_msgs::msg::Point point2,
-	                                            std::optional<double> max_length = std::nullopt);
+												geometry_msgs::msg::Point point2,
+												std::optional<double> max_length = std::nullopt);
 
 	NavigationMethod navigationMethod_{NavigationMethod::RosParam};
 	geometry_msgs::msg::Point target_point;
@@ -119,7 +119,7 @@ private:
 	std::vector<geometry_msgs::msg::Point> path_;
 	std::vector<std::vector<geometry_msgs::msg::Point>> paths_;
 
-    double calc_length(const geometry_msgs::msg::Vector3 &vector);
+	double calc_length(const geometry_msgs::msg::Vector3 &vector);
 
 	double angular_mult_{2.0};
 	double linear_mult_{1.0};
@@ -132,7 +132,7 @@ private:
 	void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
 	void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
 	rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
-  	
+
 	void checkPathsBetweenWaypoints();
 
 	rclcpp::TimerBase::SharedPtr timer_;

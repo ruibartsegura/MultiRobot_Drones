@@ -1,0 +1,4 @@
+source;share/reynold_rules/local_setup.bash
+source;share/reynold_rules/local_setup.dsv
+source;share/reynold_rules/local_setup.sh
+source;share/reynold_rules/local_setup.zsh

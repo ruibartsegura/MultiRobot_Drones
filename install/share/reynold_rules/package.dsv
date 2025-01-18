@@ -1,0 +1,11 @@
+source;share/reynold_rules/hook/cmake_prefix_path.ps1
+source;share/reynold_rules/hook/cmake_prefix_path.dsv
+source;share/reynold_rules/hook/cmake_prefix_path.sh
+source;share/reynold_rules/hook/ld_library_path_lib.ps1
+source;share/reynold_rules/hook/ld_library_path_lib.dsv
+source;share/reynold_rules/hook/ld_library_path_lib.sh
+source;share/reynold_rules/local_setup.bash
+source;share/reynold_rules/local_setup.dsv
+source;share/reynold_rules/local_setup.ps1
+source;share/reynold_rules/local_setup.sh
+source;share/reynold_rules/local_setup.zsh

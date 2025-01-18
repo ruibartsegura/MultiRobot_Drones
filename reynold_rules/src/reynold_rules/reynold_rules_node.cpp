@@ -90,8 +90,6 @@ namespace {
 namespace reynold_rules
 {
 
-using ArrayVector3d = reynold_rules_interfaces::msg::VectorArray;
-
 double
 compute_norm(const std::vector<double>& vec)
 {
@@ -103,11 +101,35 @@ compute_norm(const std::vector<double>& vec)
 ReynoldRulesNode::ReynoldRulesNode()
 : Node("reynold_rules_node"), map_(nullptr)
 {
-	formation_control_setup();
+	//formation_control_setup();
 
 	// Parameters
 	declare_parameter("view_range", view_range_);
 	get_parameter("view_range", view_range_);
+	
+	declare_parameter("view_angle", view_angle_);
+	get_parameter("view_angle", view_angle_);
+
+	declare_parameter("view_split", view_split_);
+	get_parameter("view_split", view_split_);
+
+	declare_parameter("separation_weight_", separation_weight_);
+	get_parameter("separation_weight_", separation_weight_);
+
+	declare_parameter("cohesion_weight_", cohesion_weight_);
+	get_parameter("cohesion_weight_", cohesion_weight_);
+
+	declare_parameter("alignment_weight_", alignment_weight_);
+	get_parameter("alignment_weight_", alignment_weight_);
+
+	declare_parameter("obstacle_avoidance_weight_", obstacle_avoidance_weight_);
+	get_parameter("obstacle_avoidance_weight_", obstacle_avoidance_weight_);
+
+	declare_parameter("nav2point_weight_", nav2point_weight_);
+	get_parameter("nav2point_weight_", nav2point_weight_);
+	
+	declare_parameter("DIST_THRESHOLD", DIST_THRESHOLD);
+	get_parameter("DIST_THRESHOLD", DIST_THRESHOLD);
 
 	// List of waypoint to de nav_2_point
 	for (int x = -4; x <= 4; x += 2) {
@@ -159,20 +181,7 @@ ReynoldRulesNode::ReynoldRulesNode()
 	   std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
 	);
 
-	checkPathsBetweenWaypoints();
-
-	// retrieve parameters
-	declare_parameter<int>("view_range", 0.3);
-	get_parameter("view_range", view_range_);
-
-	declare_parameter<int>("view_angle", 60);
-	get_parameter("view_angle", view_angle_);
-
-	declare_parameter<int>("view_split", 0);
-	get_parameter("view_split", view_split_);
-
 	timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
-
 }
 
 void
@@ -185,8 +194,10 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 
 	robots_[drone_number - 1] = data;
 
-  	// std::cout << "H" << data->pose.pose.position.z << std::endl;
-  	if (data->pose.pose.position.z > 0.3) READY = true;
+  	if (data->pose.pose.position.z > 0.3) {
+		READY = true;
+		std::cout << "H" << data->pose.pose.position.z << std::endl;
+	}
 }
 
 void
@@ -194,7 +205,7 @@ ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr dat
 {
   // if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
   this->map_ = data;  // Asigna el primer mapa recibido a map_
-  // checkPathsBetweenWaypoints();
+  checkPathsBetweenWaypoints();
   // }
 }
 
@@ -263,17 +274,33 @@ ReynoldRulesNode::separation_rule()
   return separation_vectors;
 }
 
+geometry_msgs::msg::Vector3
+ReynoldRulesNode::calc_average_velocity()
+{
+	geometry_msgs::msg::Vector3 avg_velocity;
+
+	for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+		avg_velocity.x += robot->twist.twist.linear.x;
+		avg_velocity.y += robot->twist.twist.linear.y;
+	}
+
+	avg_velocity.x /= NUMBER_DRONES;
+	avg_velocity.y /= NUMBER_DRONES;
+
+	return avg_velocity;
+}
+
 std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::aligment_rule()
 {
   geometry_msgs::msg::Vector3 avg_velocity = calc_average_velocity();
-  ArrayVector3d alignment_vectors;
+  std::vector<geometry_msgs::msg::Vector3> alignment_vectors;
 
   for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
     geometry_msgs::msg::Vector3 alignment_vector;
     alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
     alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
-    alignment_vectors.vectors.push_back(alignment_vector);
+    alignment_vectors.push_back(alignment_vector);
   }
   return alignment_vectors;
 }
@@ -321,11 +348,11 @@ ReynoldRulesNode::calc_cohesion_vector(geometry_msgs::msg::Point robot_pos)
 std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::cohesion_rule()
 {
-  ArrayVector3d cohesion_vectors;
+  std::vector<geometry_msgs::msg::Vector3> cohesion_vectors;
 
   for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
       geometry_msgs::msg::Vector3 cohesion_vector = calc_cohesion_vector(robot->pose.pose.position);
-      cohesion_vectors.vectors.push_back(cohesion_vector);
+      cohesion_vectors.push_back(cohesion_vector);
   }
 
   return cohesion_vectors;
@@ -701,6 +728,12 @@ ReynoldRulesNode::map_lookup(geometry_msgs::msg::Point& pos)
     return map_->data[index] == 100;
 }
 
+double
+ReynoldRulesNode::calc_length(const geometry_msgs::msg::Vector3& vector)
+{
+	return std::sqrt(vector.x * vector.x + vector.y * vector.y);
+}
+
 void
 ReynoldRulesNode::control_cycle()
 {
@@ -708,7 +741,7 @@ ReynoldRulesNode::control_cycle()
 		std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
 		        separation_rule(),
 		        // aligment_rule(),
-		        // cohesion_rule(),
+		        cohesion_rule(),
 		        //nav_2_point_rule(),
 		        // avoidance_rule()
 		};
@@ -717,14 +750,14 @@ ReynoldRulesNode::control_cycle()
 		        separation_weight_,
 				//nav2point_weight_,
 		        // obstacle_avoidance_weight_,
-		        // cohesion_weight_,
+		        cohesion_weight_,
 		        // alignment_weight_
 		};
 
-		if (formation_type_ != NONE) {
-			rules.push_back(formation_control());
-			weights.push_back(formation_weight_);
-		}
+		// if (formation_type_ != NONE) {
+		// 	rules.push_back(formation_control());
+		// 	weights.push_back(formation_weight_);
+		// }
 
 		for (size_t i = 0; i < NUMBER_DRONES; ++i) {
 			geometry_msgs::msg::Vector3 total_vector;
@@ -854,6 +887,7 @@ void
 ReynoldRulesNode::set_formation_matrix(
 	std::vector<geometry_msgs::msg::Point> formation_points)
 {
+	std::cout << "PASO 1.1" << std::endl;
 	// Set matrix initially to all 0
 	formation_matrix_ = {NUMBER_DRONES, std::vector<geometry_msgs::msg::Point>(NUMBER_DRONES)};
 
@@ -864,6 +898,7 @@ ReynoldRulesNode::set_formation_matrix(
 			formation_matrix_[i][j].y = formation_points[j].y - formation_points[i].y;
 		}
 	}
+	std::cout << "PASO 1.2" << std::endl;
 }
 
 void

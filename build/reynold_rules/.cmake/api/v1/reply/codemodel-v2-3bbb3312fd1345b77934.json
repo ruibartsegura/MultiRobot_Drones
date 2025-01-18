@@ -1,0 +1,88 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"hasInstallRule" : true,
+					"jsonFile" : "directory-.-ce8ef1f33ebf35c15221.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.12"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"name" : "",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "reynold_rules",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2,
+						3
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "reynold_rules::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-reynold_rules-cece0af235a313b7e270.json",
+					"name" : "reynold_rules",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "reynold_rules_node::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-reynold_rules_node-af76f0b450485d4eb4a2.json",
+					"name" : "reynold_rules_node",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "reynold_rules_uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-reynold_rules_uninstall-0b25fd6938920e4404f9.json",
+					"name" : "reynold_rules_uninstall",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "uninstall::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-uninstall-054ef942041262da285c.json",
+					"name" : "uninstall",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/root/CrazySim/ros2_ws/src/MultiRobot_Drones/build/reynold_rules",
+		"source" : "/root/CrazySim/ros2_ws/src/MultiRobot_Drones/reynold_rules"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 3
+	}
+}

@@ -62,7 +62,6 @@ private:
 
 	// Separation
 	double view_range_{0.6};
-	double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2);
 	geometry_msgs::msg::Vector3 calc_sep_vector(geometry_msgs::msg::Point position, int num);
 
 	// Alignment
@@ -94,10 +93,7 @@ private:
 	std::vector<geometry_msgs::msg::Point> path_;
 	std::vector<std::vector<geometry_msgs::msg::Point>> paths_;
 
-	// Control Cycle
-	double wrap_2_pi(double angle);
     double calc_length(const geometry_msgs::msg::Vector3 &vector);
-    geometry_msgs::msg::Twist vector2twist(const geometry_msgs::msg::Vector3 &vector, const geometry_msgs::msg::Quaternion &current_orientation);
 
 	double angular_mult_{2.0};
 	double linear_mult_{1.0};
@@ -108,7 +104,6 @@ private:
 
 	// Subscribers
 	void odom_callback(const nav_msgs::msg::Odometry::SharedPtr data);
-
 	void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
 	rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
   	

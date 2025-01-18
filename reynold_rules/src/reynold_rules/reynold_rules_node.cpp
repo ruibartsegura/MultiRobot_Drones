@@ -74,12 +74,22 @@ namespace {
 	v.z *= scalar;
 	return v;
 }
+
+[[nodiscard]] double get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2)
+{
+  auto x = pos1.x - pos2.x;
+  auto y = pos1.y - pos2.y;
+  auto z = pos1.z - pos2.z;
+  std::cout << "DIST" << sqrt(x * x + y * y + z * z) << std::endl;
+  return sqrt(x * x + y * y + z * z);
+}
+
 } // namespace
 
 namespace reynold_rules {
 
 ReynoldRulesNode::ReynoldRulesNode()
-: Node("publisher_node"), map_(nullptr)
+: Node("reynold_rules_node"), map_(nullptr)
 {
   // Parameters
   declare_parameter("view_range", view_range_);
@@ -119,9 +129,9 @@ ReynoldRulesNode::ReynoldRulesNode()
 		robots_.resize(NUMBER_DRONES); // Redimensiona si es necesario
 	}
 
-	for (int n = 1; n <= NUMBER_DRONES; n++) {
-		std::string odom_topic = "/cf_" + std::to_string(n) + "/odom";
-		std::string vel_topic  = "/cf_" + std::to_string(n) + "/cmd_vel";
+	for (int i = 1; i <= NUMBER_DRONES; i++) {
+		std::string odom_topic = "/cf_" + std::to_string(i) + "/odom";
+		std::string vel_topic  = "/cf_" + std::to_string(i) + "/cmd_vel";
 
 		publishers_.push_back(create_publisher<geometry_msgs::msg::Twist>(vel_topic, 10));
 		subscribers_.push_back(create_subscription<nav_msgs::msg::Odometry>(
@@ -139,7 +149,8 @@ ReynoldRulesNode::ReynoldRulesNode()
 	timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
 }
 
-void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
+void
+ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 {
 	std::string number = data->child_frame_id.substr(std::strlen("cf_"));
 
@@ -159,15 +170,6 @@ ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr dat
   this->map_ = data;  // Asigna el primer mapa recibido a map_
   // checkPathsBetweenWaypoints();
   // }
-}
-
-double
-ReynoldRulesNode::get_distance(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2){
-  auto x = pos1.x - pos2.x;
-  auto y = pos1.y - pos2.y;
-  auto z = pos1.z - pos2.z;
-  std::cout << "DIST" << sqrt(x * x + y * y + z * z) << std::endl;
-  return sqrt(x * x + y * y + z * z);
 }
 
 geometry_msgs::msg::Vector3
@@ -216,7 +218,8 @@ ReynoldRulesNode::calc_sep_vector(geometry_msgs::msg::Point position, int num)
   return repulsive_vector;
 }
 
-std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::separation_rule()
+std::vector<geometry_msgs::msg::Vector3>
+ReynoldRulesNode::separation_rule()
 {
   std::vector<geometry_msgs::msg::Vector3> separation_vectors;
   for (int i = 0; i < NUMBER_DRONES; i++) {
@@ -234,20 +237,25 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::separation_rule()
   return separation_vectors;
 }
 
-std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::aligment_rule()
+std::vector<geometry_msgs::msg::Vector3>
+ReynoldRulesNode::aligment_rule()
 {
 	while (true) {
 		continue;
 	}
 }
 
-std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::cohesion_rule()
+std::vector<geometry_msgs::msg::Vector3>
+ReynoldRulesNode::cohesion_rule()
 {
   void();
 }
 
 // Find the neighbors of a waypoint
-std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findNeighbors(const std::vector<geometry_msgs::msg::Point>& waypoints, const geometry_msgs::msg::Point& currentWp, int step)
+std::vector<geometry_msgs::msg::Point>
+ReynoldRulesNode::findNeighbors(
+	const std::vector<geometry_msgs::msg::Point>& waypoints,
+	const geometry_msgs::msg::Point& currentWp, int step)
 {
   std::vector<geometry_msgs::msg::Point> neighbors;
   for (const auto& wp : waypoints) {
@@ -260,7 +268,11 @@ std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findNeighbors(const std
 }
 
 // Check if between waypoints there is no obstacle
-bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::pair<int, int>& end) {
+bool
+ReynoldRulesNode::isPathClear(
+	const std::pair<int, int>& start,
+	const std::pair<int, int>& end)
+{
   if (!this->map_) return false;
 
   int startI = static_cast<int>((start.second - this->map_->info.origin.position.y) / this->map_->info.resolution);
@@ -308,7 +320,8 @@ bool ReynoldRulesNode::isPathClear(const std::pair<int, int>& start, const std::
 
 }
 
-void ReynoldRulesNode::recalculatePath()
+void
+ReynoldRulesNode::recalculatePath()
 {
 	// Calcular el punto de inicio como la posición promedio de los robots
 	geometry_msgs::msg::Point start;
@@ -354,8 +367,10 @@ void ReynoldRulesNode::recalculatePath()
 	}
 }
 
-std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findPathThroughWaypoints(
-        const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target)
+std::vector<geometry_msgs::msg::Point>
+ReynoldRulesNode::findPathThroughWaypoints(
+        const geometry_msgs::msg::Point& start,
+		const geometry_msgs::msg::Point& target)
 {
 	using Position2D = std::pair<int, int>;
 
@@ -406,9 +421,11 @@ std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::findPathThroughWaypoint
 	return {};
 }
 
-geometry_msgs::msg::Vector3 ReynoldRulesNode::vector_2_points(const geometry_msgs::msg::Point point1,
-                                                              const geometry_msgs::msg::Point point2,
-                                                              std::optional<double> max_length)
+geometry_msgs::msg::Vector3
+ReynoldRulesNode::vector_2_points(
+	const geometry_msgs::msg::Point point1,
+	const geometry_msgs::msg::Point point2,
+    std::optional<double> max_length)
 {
 	geometry_msgs::msg::Vector3 vector;
 
@@ -430,7 +447,8 @@ geometry_msgs::msg::Vector3 ReynoldRulesNode::vector_2_points(const geometry_msg
 	return vector;
 }
 
-std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::nav_2_point_rule()
+std::vector<geometry_msgs::msg::Vector3>
+ReynoldRulesNode::nav_2_point_rule()
 {
 	std::vector<geometry_msgs::msg::Vector3> nav_2_point_vectors;
 
@@ -493,33 +511,21 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::nav_2_point_rule()
 	return nav_2_point_vectors;
 }
 
-std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()
+std::vector<geometry_msgs::msg::Vector3>
+ReynoldRulesNode::avoidance_rule()
 {
   void();
 }
 
-geometry_msgs::msg::Twist ReynoldRulesNode::vector2twist(const geometry_msgs::msg::Vector3 &vector, const geometry_msgs::msg::Quaternion &current_orientation) {
-	geometry_msgs::msg::Twist twist;
 
-	double current_angle = 2 * std::atan2(current_orientation.z, current_orientation.w);
-	double error_angle   = wrap_2_pi(std::atan2(vector.y, vector.x) - current_angle);
-
-	twist.angular.z = angular_mult_ * error_angle;
-
-	double linear_vel = (linear_mult_ * calc_length(vector) * std::exp(-std::abs(twist.angular.z)) +
-	                     MIN_LIN_VEL);
-	twist.linear.x = std::min(linear_vel, MAX_LIN_VEL);
-
-	double linear_vel_change = std::fabs(twist.linear.x - last_linear_vel_);
-	if (linear_vel_change > MAX_VEL_DIFF_FACTOR * last_linear_vel_) {
-		twist.linear.x = (twist.linear.x + 2 * last_linear_vel_) / 3.0;
-	}
-
-	last_linear_vel_ = twist.linear.x;
-	return twist;
+double
+ReynoldRulesNode::calc_length(const geometry_msgs::msg::Vector3& vector)
+{
+	return std::sqrt(vector.x * vector.x + vector.y * vector.y);
 }
 
-void ReynoldRulesNode::control_cycle()
+void
+ReynoldRulesNode::control_cycle()
 {
 	if (READY) {
 		std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
@@ -544,45 +550,30 @@ void ReynoldRulesNode::control_cycle()
 				geometry_msgs::msg::Vector3 new_vector;
 				new_vector.x = weights[j] * rules[j][i].x;
 				new_vector.y = weights[j] * rules[j][i].y;
-				new_vector.z = weights[j] * rules[j][i].z;
 
 				total_vector.x += new_vector.x;
 				total_vector.y += new_vector.y;
-				total_vector.z += new_vector.z;
 
 				if (calc_length(new_vector) > MAX_LIN_VEL) {
 					break;
 				}
 			}
 
-			geometry_msgs::msg::Twist vel = vector2twist(total_vector,
-			                                             robots_[i]->pose.pose.orientation);
+			geometry_msgs::msg::Twist vel;
+			vel.linear.x = std::min(linear_mult_ * total_vector.x, MAX_LIN_VEL);
+			vel.linear.y = std::min(linear_mult_ * total_vector.y, MAX_LIN_VEL);
+	
 			// Imprimir los valores de separation_vectors
 			std::cout << "VELOCITY " << i << ": x=" << vel.linear.x
-			          << ", y=" << vel.linear.y << ", z=" << vel.linear.z << std::endl;
+			          << ", y=" << vel.linear.y << std::endl;
 
 			publishers_[i]->publish(vel);
 		}
 	}
 }
 
-double ReynoldRulesNode::wrap_2_pi(double angle)
-{
-	while (angle > M_PI) {
-		angle -= 2.0 * M_PI;
-	}
-	while (angle < -M_PI) {
-		angle += 2.0 * M_PI;
-	}
-	return angle;
-}
-
-double ReynoldRulesNode::calc_length(const geometry_msgs::msg::Vector3& vector)
-{
-	return std::sqrt(vector.x * vector.x + vector.y * vector.y);
-}
-
-void ReynoldRulesNode::checkPathsBetweenWaypoints() {
+void
+ReynoldRulesNode::checkPathsBetweenWaypoints() {
   for (const auto& wp : waypoints_) {
     auto neighbors = findNeighbors(waypoints_, wp);
     for (const auto& neighbor : neighbors) {
@@ -599,7 +590,8 @@ void ReynoldRulesNode::checkPathsBetweenWaypoints() {
   }
 }
 
-void ReynoldRulesNode::rendezvous_protocol()
+void
+ReynoldRulesNode::rendezvous_protocol()
 {
 	// Implement a consensus-based rendezvous protocol. Goal of a rendezvous protocol is to
 	// gather the robots in a common position in space. Test the behavior for at least two fixed

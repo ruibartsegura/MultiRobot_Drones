@@ -300,10 +300,12 @@ ReynoldRulesNode::calc_average_velocity()
 	for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
 		avg_velocity.x += robot->twist.twist.linear.x;
 		avg_velocity.y += robot->twist.twist.linear.y;
+		avg_velocity.z += robot->twist.twist.linear.z;
 	}
 
 	avg_velocity.x /= NUMBER_DRONES;
 	avg_velocity.y /= NUMBER_DRONES;
+	avg_velocity.z /= NUMBER_DRONES;
 
 	return avg_velocity;
 }
@@ -314,13 +316,21 @@ ReynoldRulesNode::aligment_rule()
 	geometry_msgs::msg::Vector3 avg_velocity = calc_average_velocity();
 	std::vector<geometry_msgs::msg::Vector3> alignment_vectors;
 
-	for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
-		geometry_msgs::msg::Vector3 alignment_vector;
-		alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
-		alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
-		alignment_vectors.push_back(alignment_vector);
-	}
-	return alignment_vectors;
+  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+    geometry_msgs::msg::Vector3 alignment_vector;
+    alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
+    alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
+	alignment_vector.z = avg_velocity.z - robot->twist.twist.linear.z;
+    alignment_vectors.push_back(alignment_vector);
+  }
+
+// Imprimir los valores de alignment_vectors
+ std::cout << "Alignment vectors:" << std::endl;
+ for (size_t i = 0; i < alignment_vectors.size(); ++i) {
+     const auto &vec = alignment_vectors[i];
+     std::cout << "Drone " << i << ": x=" << vec.x << ", y=" << vec.y << ", z=" << vec.z << std::endl;
+ }
+  return alignment_vectors;
 }
 
 geometry_msgs::msg::Point
@@ -328,13 +338,15 @@ ReynoldRulesNode::calc_average_pos(std::vector<nav_msgs::msg::Odometry> position
 {
 	geometry_msgs::msg::Point average_pos;
 
-	for (nav_msgs::msg::Odometry position : positions) {
-		average_pos.x += position.pose.pose.position.x;
-		average_pos.y += position.pose.pose.position.y;
-	}
+  for (nav_msgs::msg::Odometry position : positions) {
+    average_pos.x += position.pose.pose.position.x;
+    average_pos.y += position.pose.pose.position.y;
+	average_pos.z += position.pose.pose.position.z;
+  }
 
-	average_pos.x = average_pos.x / positions.size();
-	average_pos.y = average_pos.y / positions.size();
+  average_pos.x = average_pos.x / positions.size();
+  average_pos.y = average_pos.y / positions.size();
+  average_pos.z = average_pos.z / positions.size();
 
 	return average_pos;
 }

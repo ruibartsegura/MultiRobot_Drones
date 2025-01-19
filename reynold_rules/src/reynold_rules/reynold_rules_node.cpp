@@ -1,6 +1,7 @@
 #include "reynold_rules/reynold_rules_node.hpp"
 
 #include <algorithm>
+#include <chrono>
 #include <iterator>
 #include <memory>
 #include <sstream>
@@ -176,6 +177,14 @@ ReynoldRulesNode::ReynoldRulesNode()
 	declare_parameter("nav2point_weight", nav2point_weight_);
 	get_parameter("nav2point_weight", nav2point_weight_);
 
+  auto control_cycle_period_ms = control_cycle_period_.count();
+	declare_parameter("control_cycle_period_ms", control_cycle_period_ms);
+	get_parameter("control_cycle_period_ms", control_cycle_period_ms);
+  control_cycle_period_ = std::chrono::milliseconds{control_cycle_period_ms};
+
+	declare_parameter("rendezvous_recalc_period", rendezvous_recalc_period_);
+	get_parameter("rendezvous_recalc_period", rendezvous_recalc_period_);
+
 	this->declare_parameter<std::vector<double>>("target_point", {0.0, 0.0, 0.0});
 
 	// Obtener el parámetro y convertirlo a geometry_msgs::msg::Point
@@ -208,6 +217,9 @@ ReynoldRulesNode::ReynoldRulesNode()
 	std::string navigationMethod;
 	declare_parameter("navigation_method", navigationMethod);
 	get_parameter("navigation_method", navigationMethod);
+  if (navigationMethod == "Rendezvous") {
+    navigationMethod_ = NavigationMethod::Rendezvous;
+  }
 
 	std::string topology;
 	declare_parameter("topology", topology);
@@ -246,11 +258,11 @@ ReynoldRulesNode::ReynoldRulesNode()
 	   std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
 	);
 
-
   request_map();
   if(map_) {
+    checkPathsBetweenWaypoints();
     RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
-    timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+    timer_ = create_wall_timer(control_cycle_period_, std::bind(&ReynoldRulesNode::control_cycle, this));
   } else {
     RCLCPP_INFO(get_logger(), "Node created, waiting for map...");
   }
@@ -278,7 +290,7 @@ ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr dat
 	
 	if (first) {
 	RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
-	timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+	timer_ = create_wall_timer(control_cycle_period_, std::bind(&ReynoldRulesNode::control_cycle, this));
 	}
 }
 
@@ -553,6 +565,20 @@ ReynoldRulesNode::recalculatePath()
 	}
 }
 
+Point ReynoldRulesNode::find_nearest_waypoint(const Point& p)
+{
+	auto nearest_dist = -1.0;
+	Point nearest;
+	for (const auto& wp : this->waypoints_) {
+		double d = get_distance(p, wp);
+		if (d < nearest_dist || nearest_dist < 0) {
+      nearest_dist = d;
+			nearest      = wp;
+		}
+	}
+  return nearest;
+}
+
 std::vector<geometry_msgs::msg::Point>
 ReynoldRulesNode::findPathThroughWaypoints(
         const geometry_msgs::msg::Point& start,
@@ -603,7 +629,8 @@ ReynoldRulesNode::findPathThroughWaypoints(
 		}
 	}
 
-	RCLCPP_WARN(this->get_logger(), "No available route found..");
+	RCLCPP_WARN(this->get_logger(), "No available route found: (%.2f %.2f) -> (%.2f %.2f)",
+             start.x, start.y, target.x, target.y);
 	return {};
 }
 
@@ -683,9 +710,11 @@ ReynoldRulesNode::nav_2_point_rule()
 			nav_2_point_vectors.push_back(vec);
 		}
 	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
-		RCLCPP_WARN(this->get_logger(), "Rendezvous");
-		rendezvous_protocol();
-
+    if (--rendezvous_counter_ <= 0) {
+      rendezvous_counter_ = rendezvous_recalc_period_;
+      rendezvous_protocol();
+    }
+		
 		if (this->paths_.size() != this->robots_.size()) {
 			throw std::runtime_error{"robots_ and paths_ sizes don't match"};
 		}
@@ -827,7 +856,7 @@ ReynoldRulesNode::control_cycle()
 			aligment_rule(),
 			cohesion_rule(),
 			formation_control(),
-			nav_2_point_rule()
+			nav_2_point_rule(),
 	};
 
 	std::vector<double> weights = {
@@ -836,7 +865,7 @@ ReynoldRulesNode::control_cycle()
 			cohesion_weight_,
 			alignment_weight_,
 			formation_weight_,
-			nav2point_weight_
+			nav2point_weight_,
 	};
 
 	for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); i++) {
@@ -894,20 +923,29 @@ ReynoldRulesNode::rendezvous_protocol()
 	this->paths_.clear();
 
 	for (size_t i = 0; i < robots_.size(); i++) {
-		geometry_msgs::msg::Point x{};
+    const auto& position = robots_[i]->pose.pose.position;
+		auto x = position;
 		for (size_t j = 0; j < robots_.size(); j++) {
 			// implement the consensus equation
 			const auto a_ij = topology_.at(i).at(j);
-			const auto d    = vector_2_points(robots_[i]->pose.pose.position,
-                                                       robots_[j]->pose.pose.position);
+			const auto d    = vector_2_points(position, robots_[j]->pose.pose.position);
 
 			// x += a_ij * d
 			x = add(x, mul(a_ij, d));
 		}
 
 		// update the robot's navigation to x
-		auto path = findPathThroughWaypoints(robots_[i]->pose.pose.position, x);
+    const auto firstWaypoint = find_nearest_waypoint(robots_[i]->pose.pose.position);
+    const auto lastWaypoint = find_nearest_waypoint(x);
+		auto path = findPathThroughWaypoints(firstWaypoint, lastWaypoint);
 		path.push_back(x);
+   
+    auto wp = path.front();
+    wp.z = position.z;
+    if (path.size() > 1 && get_distance(position, wp) < this->DIST_THRESHOLD) {
+      path.erase(path.begin());
+		}
+
 		this->paths_.emplace_back(path);
 	}
 }

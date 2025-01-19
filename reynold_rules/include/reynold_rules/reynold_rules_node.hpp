@@ -9,6 +9,7 @@
 #include "geometry_msgs/msg/vector3.hpp"
 #include <geometry_msgs/msg/quaternion.hpp>
 
+#include <chrono>
 #include <optional>
 #include <queue>
 #include <set>
@@ -57,6 +58,10 @@ private:
 	double obstacle_avoidance_weight_{0.0};
 	double formation_weight_ {0.0};
 
+  std::chrono::milliseconds control_cycle_period_{500};
+  int rendezvous_recalc_period_{1};
+  int rendezvous_counter_{};
+
 	// Formation Control
 	int formation_type_;
 	static const int NONE = 1;
@@ -101,6 +106,8 @@ private:
 
 	// Nav_2_Point
 	void recalculatePath();
+  geometry_msgs::msg::Point find_nearest_waypoint(const geometry_msgs::msg::Point& p);
+
 	std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(
 			const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target);
 

@@ -13,6 +13,8 @@
     cohesion_weight: 0.2
     obstacle_avoidance_weight: 0.4
     formation_weight: 0.3
+    control_cycle_period_ms: 500
+    rendezvous_recalc_period: 50 #update the rendezvous paths every n control cycles
     MAX_VEL_DIFF_FACTOR: 0.4
     formation_type: 2 # 1->None, 2->line, 3->triangle, 4->square
     side_length: 1.5

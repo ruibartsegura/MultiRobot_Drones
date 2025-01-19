@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <memory>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -12,6 +13,7 @@
 #include "geometry_msgs/msg/vector3.hpp"
 #include "nav_msgs/msg/occupancy_grid.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "nav_msgs/srv/get_map.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "reynold_rules/reynold_rules_node.hpp"
 #include "std_msgs/msg/int32.hpp"
@@ -30,6 +32,22 @@ using geometry_msgs::msg::Point;
 using geometry_msgs::msg::Vector3;
 
 namespace {
+void request_map_func(std::unique_ptr<std::promise<nav_msgs::msg::OccupancyGrid::SharedPtr>>&& p) {
+  auto node = rclcpp::Node::make_shared("client");
+  auto client = node->create_client<nav_msgs::srv::GetMap>("/map_server/map");
+  auto request = std::make_shared<nav_msgs::srv::GetMap::Request>();
+  auto result_future = client->async_send_request(request);
+  const auto timeout = std::chrono::seconds{3};
+  if (rclcpp::spin_until_future_complete(node, result_future, timeout) != rclcpp::FutureReturnCode::SUCCESS) {
+    client->remove_pending_request(result_future);
+    p->set_value(nullptr);
+    return;
+  }
+
+  auto result = result_future.get();
+  p->set_value(std::make_shared<nav_msgs::msg::OccupancyGrid>(result->map));
+}
+
 [[nodiscard]] std::vector<std::vector<double>> parseTopology(const std::string& s)
 {
 	if (s.empty()) {
@@ -216,7 +234,14 @@ ReynoldRulesNode::ReynoldRulesNode()
 	   std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
 	);
 
-  RCLCPP_INFO(get_logger(), "Node created, waiting for map...");
+
+  request_map();
+  if(map_) {
+    RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
+    timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+  } else {
+    RCLCPP_INFO(get_logger(), "Node created, waiting for map...");
+  }
 }
 
 void
@@ -243,6 +268,15 @@ ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr dat
     RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
     timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
   }
+}
+
+void ReynoldRulesNode::request_map()
+{
+  auto p = std::make_unique<std::promise<nav_msgs::msg::OccupancyGrid::SharedPtr>>();
+  std::future<nav_msgs::msg::OccupancyGrid::SharedPtr> f = p->get_future();
+  std::thread th(request_map_func, std::move(p));
+  map_ = f.get();
+  th.join();
 }
 
 geometry_msgs::msg::Vector3

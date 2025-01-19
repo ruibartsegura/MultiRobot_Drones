@@ -135,6 +135,8 @@ private:
 	void map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data);
 	rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_sub_;
 
+	void request_map();
+
 	void checkPathsBetweenWaypoints();
 
 	rclcpp::TimerBase::SharedPtr timer_;

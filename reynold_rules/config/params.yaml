@@ -12,7 +12,7 @@
     nav2point_weight: 0.5
     cohesion_weight: 0.4
     obstacle_avoidance_weight: 0.8
-    formation_weight: 0.5
+    formation_weight: 0.3
     MAX_VEL_DIFF_FACTOR: 0.4
     formation_type: 3 # 1->None, 2->line, 3->triangle, 4->square
     side_length: 1.5

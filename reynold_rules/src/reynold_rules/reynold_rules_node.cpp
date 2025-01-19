@@ -797,27 +797,27 @@ ReynoldRulesNode::control_cycle()
 	// Waits for all drones to be ready
 	for (int i = 0; i < NUMBER_DRONES; i++) {
 		if (ready_[i] == false) {
-			RCLCPP_INFO(get_logger(), "Waiting for drone %d...\n", i + 1);
+			RCLCPP_INFO(get_logger(), "Waiting for drone %d...", i + 1);
 			return;
 		}
 	}
 
 	std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
-			// separation_rule(),
-			avoidance_rule(),
+			separation_rule(),
+			//avoidance_rule(),
 			// aligment_rule(),
 			// cohesion_rule(),
-			nav_2_point_rule(),
-			// formation_control()
+			formation_control(),
+			nav_2_point_rule()
 	};
 
 	std::vector<double> weights = {
-			// separation_weight_,
-			obstacle_avoidance_weight_,
+			separation_weight_,
+			//obstacle_avoidance_weight_,
 			// cohesion_weight_,
 			// alignment_weight_
-			nav2point_weight_,
-			// formation_weight_
+			formation_weight_,
+			nav2point_weight_
 	};
 
 	for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); i++) {
@@ -986,7 +986,7 @@ ReynoldRulesNode::formation_control()
 	this->get_parameter("formation_type", new_formation_type);
 
 	// Formation vector will work as a rule
-	std::vector<geometry_msgs::msg::Vector3> formation_vectors;
+	std::vector<geometry_msgs::msg::Vector3> formation_vectors(NUMBER_DRONES);
 	if (new_formation_type == NONE) return formation_vectors;
 
 	if (new_formation_type != formation_type_) {
@@ -994,6 +994,7 @@ ReynoldRulesNode::formation_control()
 		set_formation_matrix(get_formation_points());
 	}
 
+	RCLCPP_INFO(get_logger(), "formation protocol type %d", formation_type_);
 	for (int i = 0; i < NUMBER_DRONES; i++) {
 		geometry_msgs::msg::Vector3 final_vector;
 
@@ -1015,7 +1016,7 @@ ReynoldRulesNode::formation_control()
 			final_vector.y = final_vector.y + vector.y;
 		}
 
-		formation_vectors.push_back(final_vector);
+		formation_vectors[i] = (final_vector);
 	}
 
 	return formation_vectors;

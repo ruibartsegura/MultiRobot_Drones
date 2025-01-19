@@ -260,14 +260,14 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 void
 ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
 {
-  const bool first = !map_;
+  	const bool first = !map_;
 	this->map_ = data;
 	checkPathsBetweenWaypoints();
 	
-  if (first) {
-    RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
-    timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
-  }
+	if (first) {
+	RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
+	timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+	}
 }
 
 void ReynoldRulesNode::request_map()
@@ -627,6 +627,16 @@ ReynoldRulesNode::nav_2_point_rule()
 	std::vector<geometry_msgs::msg::Vector3> nav_2_point_vectors;
 
 	if (this->navigationMethod_ == NavigationMethod::RosParam) {
+		std::vector<double> target_point_vec;
+		this->get_parameter("target_point", target_point_vec);
+
+		if (target_point_vec.size() == 3) {
+			target_point_.x = target_point_vec[0];
+			target_point_.y = target_point_vec[1];
+			target_point_.z = target_point_vec[2];
+			RCLCPP_INFO(this->get_logger(), "Target point: x=%.2f, y=%.2f, z=%.2f",
+						target_point_.x, target_point_.y, target_point_.z);
+		}
 		// Verificar si hay un nuevo punto objetivo
 		if (this->target_point_.x != this->prev_point.x ||
 		    this->target_point_.y != this->prev_point.y) {

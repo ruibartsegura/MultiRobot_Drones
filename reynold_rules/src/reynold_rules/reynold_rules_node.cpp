@@ -182,6 +182,11 @@ ReynoldRulesNode::ReynoldRulesNode()
 		RCLCPP_INFO(this->get_logger(), "Target point initialized: x=%.2f, y=%.2f, z=%.2f",
 					target_point_.x, target_point_.y, target_point_.z);
 	}
+	// The drone can't be underground so in the first comparation the result is going to be always false
+	this->prev_point.x = 0;
+	this->prev_point.y = 0;
+	this->prev_point.z = -1;
+
 
 	// List of waypoint to de nav_2_point
 	for (int x = -4; x <= 4; x += 2) {
@@ -512,7 +517,7 @@ ReynoldRulesNode::recalculatePath()
 	for (const auto& wp : this->waypoints_) {              // Iterar sobre la lista de waypoints
 		double current_dist = get_distance(start, wp); // Calcular la distancia actual
 		if (current_dist < dist || dist < 0) {
-			dist           = current_dist;
+			dist = current_dist;
 			closer_2_start = wp; // Actualizar el punto más cercano
 		}
 	}
@@ -639,7 +644,8 @@ ReynoldRulesNode::nav_2_point_rule()
 		}
 		// Verificar si hay un nuevo punto objetivo
 		if (this->target_point_.x != this->prev_point.x ||
-		    this->target_point_.y != this->prev_point.y) {
+		    this->target_point_.y != this->prev_point.y ||
+			this->target_point_.z != this->prev_point.z) {
 			recalculatePath();
 			this->prev_point = this->target_point_;
 		}
@@ -728,7 +734,7 @@ geometry_msgs::msg::Vector3 ReynoldRulesNode::sum_weighted_repellent_vectors(int
 		const auto distance = get_distance(pose.position, obstacle);
 		if (distance != 0) {
 			const auto opposite = vector_2_points(obstacle, pose.position);
-			v                   = add(v, div(opposite, distance));
+			v = add(v, div(opposite, distance));
 		}
 	}
 

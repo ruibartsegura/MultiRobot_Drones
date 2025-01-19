@@ -6,7 +6,7 @@
     MAX_LIN_VEL: 0.4
     DIST_THRESHOLD: 0.4
     navigation_method: "RosParam"
-    topology: "0,1,1,1;0,0,0,0;0,0,0,0;0,0,0,0"
+    topology: "0,1,1,1;1,0,1,1;1,1,0,1;1,1,1,0"
     separation_weight: 0.8
     alignment_weight: 0.3
     nav2point_weight: 0.5
@@ -14,7 +14,7 @@
     obstacle_avoidance_weight: 0.8
     formation_weight: 0.3
     MAX_VEL_DIFF_FACTOR: 0.4
-    formation_type: 3 # 1->None, 2->line, 3->triangle, 4->square
+    formation_type: 1 # 1->None, 2->line, 3->triangle, 4->square
     side_length: 1.5
     view_range: 0.8
     view_angle: 180.0

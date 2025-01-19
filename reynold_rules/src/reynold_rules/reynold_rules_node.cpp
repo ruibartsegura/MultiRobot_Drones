@@ -111,6 +111,13 @@ template <typename T>
 	return sqrt(x * x + y * y + z * z);
 }
 
+[[nodiscard]] double get_distance_2d(geometry_msgs::msg::Point pos1, geometry_msgs::msg::Point pos2)
+{
+	auto x = pos1.x - pos2.x;
+	auto y = pos1.y - pos2.y;
+	return sqrt(x * x + y * y);
+}
+
 } // namespace
 
 namespace reynold_rules
@@ -639,8 +646,6 @@ ReynoldRulesNode::nav_2_point_rule()
 			target_point_.x = target_point_vec[0];
 			target_point_.y = target_point_vec[1];
 			target_point_.z = target_point_vec[2];
-			RCLCPP_INFO(this->get_logger(), "Target point: x=%.2f, y=%.2f, z=%.2f",
-						target_point_.x, target_point_.y, target_point_.z);
 		}
 		// Verificar si hay un nuevo punto objetivo
 		if (this->target_point_.x != this->prev_point.x ||
@@ -648,9 +653,10 @@ ReynoldRulesNode::nav_2_point_rule()
 			this->target_point_.z != this->prev_point.z) {
 			recalculatePath();
 			this->prev_point = this->target_point_;
+			RCLCPP_INFO(this->get_logger(), "New target point: x=%.2f, y=%.2f, z=%.2f",
+						target_point_.x, target_point_.y, target_point_.z);
 		}
 
-		RCLCPP_INFO(get_logger(), "nav_2_point_rule: 1");
 		// Verificar si el enjambre ha llegado al waypoint actual
 		geometry_msgs::msg::Point average_position;
 		for (const auto& robot : this->robots_) {
@@ -662,14 +668,12 @@ ReynoldRulesNode::nav_2_point_rule()
 		average_position.y /= this->NUMBER_DRONES;
 		average_position.z /= this->NUMBER_DRONES;
 
-		RCLCPP_WARN(get_logger(), "nav_2_point_rule: 2");
-		if (get_distance(average_position, this->path_.front()) < this->DIST_THRESHOLD) {
+		if (get_distance_2d(average_position, this->path_.front()) < this->DIST_THRESHOLD) {
 			if (this->path_.front() != this->target_point_) {
 				this->path_.erase(this->path_.begin()); // Eliminar waypoint del camino
 			}
 		}
 
-		RCLCPP_INFO(get_logger(), "nav_2_point_rule: 3");
 		// Calcular los vectores de navegación para los robots hacia el waypoint actual del
 		// camino
 		for (const auto& robot : this->robots_) {
@@ -678,7 +682,6 @@ ReynoldRulesNode::nav_2_point_rule()
 			                                 this->MAX_LIN_VEL);
 			nav_2_point_vectors.push_back(vec);
 		}
-		RCLCPP_INFO(get_logger(), "end");
 	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
 		RCLCPP_WARN(this->get_logger(), "Rendezvous");
 		rendezvous_protocol();
@@ -691,7 +694,7 @@ ReynoldRulesNode::nav_2_point_rule()
 			auto& path      = paths_[i];
 			const auto& pos = robots_[i]->pose.pose.position;
 			if ((path.size() > 1) &&
-			    (get_distance(pos, path.front()) < this->DIST_THRESHOLD)) {
+			    (get_distance_2d(pos, path.front()) < this->DIST_THRESHOLD)) {
 				path.erase(path.begin());
 			}
 
@@ -920,7 +923,7 @@ ReynoldRulesNode::get_formation_points()
 
 	switch (formation_type_) {
 	case LINE: // (0,0); (d,0); (2d,0); (3d,0)...
-		dist = side_length_ / NUMBER_DRONES;
+		dist = 2 * side_length_ / NUMBER_DRONES;
 		for (int i = 0; i < NUMBER_DRONES; i++) {
 
 			geometry_msgs::msg::Point point;

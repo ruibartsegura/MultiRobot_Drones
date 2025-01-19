@@ -16,7 +16,7 @@
     MAX_VEL_DIFF_FACTOR: 0.4
     formation_type: 3 # 1->None, 2->line, 3->triangle, 4->square
     side_length: 1.5
-    view_range: 0.4
-    view_angle: 0.4
-    view_split: 0.4
+    view_range: 0.8
+    view_angle: 180.0
+    view_split: 0.0
     target_point: [4.0, -4.0, 0.5]

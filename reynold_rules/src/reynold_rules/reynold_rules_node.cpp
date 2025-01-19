@@ -60,7 +60,8 @@ namespace {
 	return topology;
 }
 
-[[nodiscard]] Point add(Point p, const Vector3& v)
+template <typename T>
+[[nodiscard]] T add(T p, const Vector3& v)
 {
 	p.x += v.x;
 	p.y += v.y;
@@ -73,6 +74,14 @@ namespace {
 	v.x *= scalar;
 	v.y *= scalar;
 	v.z *= scalar;
+	return v;
+}
+
+[[nodiscard]] Vector3 div(Vector3 v, double scalar)
+{
+	v.x /= scalar;
+	v.y /= scalar;
+	v.z /= scalar;
 	return v;
 }
 
@@ -208,7 +217,7 @@ ReynoldRulesNode::ReynoldRulesNode()
 	   std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
 	);
 
-	timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+  RCLCPP_INFO(get_logger(), "Node created, waiting for map...");
 }
 
 void
@@ -228,10 +237,14 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 void
 ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
 {
-	// if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
-	this->map_ = data;  // Asigna el primer mapa recibido a map_
+  const bool first = !map_;
+	this->map_ = data;
 	checkPathsBetweenWaypoints();
-	// }
+	
+  if (first) {
+    RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
+    timer_ = create_wall_timer(500ms, std::bind(&ReynoldRulesNode::control_cycle, this));
+  }
 }
 
 geometry_msgs::msg::Vector3
@@ -646,61 +659,49 @@ ReynoldRulesNode::nav_2_point_rule()
 	return nav_2_point_vectors;
 }
 
-std::vector<geometry_msgs::msg::Vector3>
-ReynoldRulesNode::avoidance_rule()
+std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()
 {
-  	void();
+	std::vector<geometry_msgs::msg::Vector3> vectors;
+	for (size_t i = 0; i < robots_.size(); ++i) {
+		vectors.emplace_back(sum_weighted_repellent_vectors(i));
+	}
+	return vectors;
 }
 
-geometry_msgs::msg::Vector3
-ReynoldRulesNode::sum_weighted_repellent_vectors(int robot_index)
+geometry_msgs::msg::Vector3 ReynoldRulesNode::sum_weighted_repellent_vectors(int robot_index)
 {
 	// Find obstacles in the view range and compute the weighted sum of the distance vectors.
 	// The weight for each distance vector is (-1 / distance) to simulate a repellent force.
 
-	geometry_msgs::msg::Vector3 v3;
-
 	if (!robots_[robot_index]) {
-		return v3;
+		return Vector3{};
 	}
 
-	auto robot_pose = robots_[robot_index]->pose.pose;
-	std::vector<geometry_msgs::msg::Point> obstacles = find_obstacles(robot_pose);
-	if (size(obstacles) == 0) {
-		return v3;
+	const auto pose      = robots_[robot_index]->pose.pose;
+	const auto obstacles = find_obstacles(pose);
+	if (obstacles.size() == 0) {
+		return Vector3{};
 	}
 
-	std::vector<double> robot_position = {robot_pose.position.x, robot_pose.position.y};
-
-
-	std::vector<double> v = {0.0, 0.0};
-	for (geometry_msgs::msg::Point obstacle : obstacles) {
-		std::vector<double> obstacle_arr = {obstacle.x, obstacle.y};
-		std::vector<double> opposite_vector;
-		opposite_vector[0] = robot_position[0] - obstacle_arr[0];
-		opposite_vector[1] = robot_position[1] - obstacle_arr[1];
-		double distance = compute_norm(opposite_vector);
+	Vector3 v{};
+	// std::vector<double> v = {0.0, 0.0};
+	for (const auto& obstacle : obstacles) {
+		const auto distance = get_distance(pose.position, obstacle);
 		if (distance != 0) {
-			v[0] += opposite_vector[0] / distance;
-			v[1] += opposite_vector[1] / distance;
+			const auto opposite = vector_2_points(obstacle, pose.position);
+			v                   = add(v, div(opposite, distance));
 		}
 	}
 
-	v[0] = v[0] / size(obstacles);
-	v[1] = v[1] / size(obstacles);
+	v = div(v, obstacles.size());
 
-	v3.x = v[0];
-	v3.y = v[1];
-	return v3;
+	return v;
 }
 
 std::vector<geometry_msgs::msg::Point>
 ReynoldRulesNode::find_obstacles(const geometry_msgs::msg::Pose robot_pose)
 {
 	std::vector<geometry_msgs::msg::Point> obstacles;
-	if (!map_) {
-		return obstacles;
-	}
 
 	double robot_x = robot_pose.position.x;
 	double robot_y = robot_pose.position.y;
@@ -712,12 +713,13 @@ ReynoldRulesNode::find_obstacles(const geometry_msgs::msg::Pose robot_pose)
 	double max_angle = (view_split_ + view_angle_) * (M_PI / 180.0);
 
 	double radial_step_size = map_->info.resolution;
-	int n_radial = static_cast<int>(view_range_ / radial_step_size);
-	auto s = ANGULAR_STEPSIZE;
+	int n_radial            = static_cast<int>(view_range_ / radial_step_size);
+	auto s                  = ANGULAR_STEPSIZE;
 	std::vector<int> angular_range;
-	for (int i = int(-max_angle / s); i < int(max_angle / s); ++i) {
+
+	for (int i = int(-max_angle / s); i <= int(max_angle / s); ++i) {
 		if (i < int(-min_angle / s) || i >= int(min_angle / s)) {
-		angular_range.push_back(i);
+			angular_range.push_back(i);
 		}
 	}
 
@@ -731,8 +733,9 @@ ReynoldRulesNode::find_obstacles(const geometry_msgs::msg::Pose robot_pose)
 			p.x = robot_x + distance * cos_alpha;
 			p.y = robot_y + distance * sin_alpha;
 			// ** TODO p.z (?)
-			if (map_lookup(p)){
+			if (map_lookup(p)) {
 				obstacles.push_back(p);
+				break; // break to not view "inside" the obstacle
 			}
 		}
 	}
@@ -744,9 +747,6 @@ ReynoldRulesNode::map_lookup(geometry_msgs::msg::Point& pos)
 {
 	// Return True if the position is within the map and there is an obstacle, else False
 
-	if (!map_) {
-	return false;
-	}
     int i = static_cast<int>((pos.y - map_->info.origin.position.y) / map_->info.resolution);
     int j = static_cast<int>((pos.x - map_->info.origin.position.x) / map_->info.resolution);
     int index = map_->info.width * i + j;
@@ -775,20 +775,20 @@ ReynoldRulesNode::control_cycle()
 
 	std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
 			// separation_rule(),
+			avoidance_rule(),
 			// aligment_rule(),
 			// cohesion_rule(),
 			nav_2_point_rule(),
-			// avoidance_rule(),
-			formation_control()
+			// formation_control()
 	};
 
 	std::vector<double> weights = {
 			// separation_weight_,
-			nav2point_weight_,
-			// obstacle_avoidance_weight_,
+			obstacle_avoidance_weight_,
 			// cohesion_weight_,
 			// alignment_weight_
-			formation_weight_
+			nav2point_weight_,
+			// formation_weight_
 	};
 
 	for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); i++) {

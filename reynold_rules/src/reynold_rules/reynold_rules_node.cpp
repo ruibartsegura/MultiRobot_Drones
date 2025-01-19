@@ -81,7 +81,6 @@ namespace {
 	auto x = pos1.x - pos2.x;
 	auto y = pos1.y - pos2.y;
 	auto z = pos1.z - pos2.z;
-	// std::cout << "DIST" << sqrt(x * x + y * y + z * z) << std::endl;
 	return sqrt(x * x + y * y + z * z);
 }
 
@@ -221,17 +220,14 @@ ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr data)
 
 	robots_[drone_number - 1] = data;
 
-  	// std::cout << "H" << data->pose.pose.position.z << std::endl;
 	if (data->pose.pose.position.z > HEIGHT) ready_[drone_number - 1] = true;
 }
 
 void
 ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPtr data)
 {
-	// if (this->map_ == nullptr) {  // Usamos 'this->' para acceder a la variable miembro
 	this->map_ = data;  // Asigna el primer mapa recibido a map_
 	checkPathsBetweenWaypoints();
-	// }
 }
 
 geometry_msgs::msg::Vector3
@@ -316,37 +312,31 @@ ReynoldRulesNode::aligment_rule()
 	geometry_msgs::msg::Vector3 avg_velocity = calc_average_velocity();
 	std::vector<geometry_msgs::msg::Vector3> alignment_vectors;
 
-  for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
-    geometry_msgs::msg::Vector3 alignment_vector;
-    alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
-    alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
-	alignment_vector.z = avg_velocity.z - robot->twist.twist.linear.z;
-    alignment_vectors.push_back(alignment_vector);
-  }
+	for (nav_msgs::msg::Odometry::SharedPtr robot : robots_) {
+		geometry_msgs::msg::Vector3 alignment_vector;
+		alignment_vector.x = avg_velocity.x - robot->twist.twist.linear.x;
+		alignment_vector.y = avg_velocity.y - robot->twist.twist.linear.y;
+		alignment_vector.z = avg_velocity.z - robot->twist.twist.linear.z;
+		alignment_vectors.push_back(alignment_vector);
+	}
 
-// Imprimir los valores de alignment_vectors
- std::cout << "Alignment vectors:" << std::endl;
- for (size_t i = 0; i < alignment_vectors.size(); ++i) {
-     const auto &vec = alignment_vectors[i];
-     std::cout << "Drone " << i << ": x=" << vec.x << ", y=" << vec.y << ", z=" << vec.z << std::endl;
- }
-  return alignment_vectors;
-}
+	return alignment_vectors;
+	}
 
 geometry_msgs::msg::Point
 ReynoldRulesNode::calc_average_pos(std::vector<nav_msgs::msg::Odometry> positions)
 {
 	geometry_msgs::msg::Point average_pos;
 
-  for (nav_msgs::msg::Odometry position : positions) {
-    average_pos.x += position.pose.pose.position.x;
-    average_pos.y += position.pose.pose.position.y;
-	average_pos.z += position.pose.pose.position.z;
-  }
+	for (nav_msgs::msg::Odometry position : positions) {
+		average_pos.x += position.pose.pose.position.x;
+		average_pos.y += position.pose.pose.position.y;
+		average_pos.z += position.pose.pose.position.z;
+	}
 
-  average_pos.x = average_pos.x / positions.size();
-  average_pos.y = average_pos.y / positions.size();
-  average_pos.z = average_pos.z / positions.size();
+	average_pos.x = average_pos.x / positions.size();
+	average_pos.y = average_pos.y / positions.size();
+	average_pos.z = average_pos.z / positions.size();
 
 	return average_pos;
 }
@@ -467,9 +457,6 @@ ReynoldRulesNode::recalculatePath()
 	start.x /= this->NUMBER_DRONES;
 	start.y /= this->NUMBER_DRONES;
 
-	std::cout << "Start x" << start.x << std::endl;
-	std::cout << "Start y" << start.y << std::endl;
-
 	// Encontrar el waypoint más cercano al inicio y al objetivo
 	double dist = -1; // Inicializar con el valor máximo de double
 	geometry_msgs::msg::Point closer_2_start;
@@ -490,11 +477,6 @@ ReynoldRulesNode::recalculatePath()
 			closer_2_target = wp; // Actualizar el punto más cercano
 		}
 	}
-
-	std::cout << "Close start x" << closer_2_start.x << std::endl;
-	std::cout << "Close start y" << closer_2_start.y << std::endl;
-	std::cout << "Close target x" << closer_2_target.x << std::endl;
-	std::cout << "Close target y" << closer_2_target.y << std::endl;
 
 	// Encontrar el camino a través de los waypoints
 	this->path_ = findPathThroughWaypoints(closer_2_start, closer_2_target);
@@ -599,7 +581,6 @@ ReynoldRulesNode::nav_2_point_rule()
 		// Verificar si hay un nuevo punto objetivo
 		if (this->target_point_.x != this->prev_point.x ||
 		    this->target_point_.y != this->prev_point.y) {
-			std::cout << "Primer Calculo ruta" << std::endl;
 			recalculatePath();
 			this->prev_point = this->target_point_;
 		}

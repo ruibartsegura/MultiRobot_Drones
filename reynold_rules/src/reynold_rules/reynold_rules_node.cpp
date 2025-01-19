@@ -128,21 +128,21 @@ ReynoldRulesNode::ReynoldRulesNode()
 	declare_parameter("view_split", view_split_);
 	get_parameter("view_split", view_split_);
 
-	declare_parameter("separation_weight_", separation_weight_);
-	get_parameter("separation_weight_", separation_weight_);
+	declare_parameter("separation_weight", separation_weight_);
+	get_parameter("separation_weight", separation_weight_);
 
-	declare_parameter("cohesion_weight_", cohesion_weight_);
-	get_parameter("cohesion_weight_", cohesion_weight_);
+	declare_parameter("cohesion_weight", cohesion_weight_);
+	get_parameter("cohesion_weight", cohesion_weight_);
 
-	declare_parameter("alignment_weight_", alignment_weight_);
-	get_parameter("alignment_weight_", alignment_weight_);
+	declare_parameter("alignment_weight", alignment_weight_);
+	get_parameter("alignment_weight", alignment_weight_);
 
-	declare_parameter("obstacle_avoidance_weight_", obstacle_avoidance_weight_);
-	get_parameter("obstacle_avoidance_weight_", obstacle_avoidance_weight_);
+	declare_parameter("obstacle_avoidance_weight", obstacle_avoidance_weight_);
+	get_parameter("obstacle_avoidance_weight", obstacle_avoidance_weight_);
 
-	declare_parameter("nav2point_weight_", nav2point_weight_);
-	get_parameter("nav2point_weight_", nav2point_weight_);
-	
+	declare_parameter("nav2point_weight", nav2point_weight_);
+	get_parameter("nav2point_weight", nav2point_weight_);
+
 	this->declare_parameter<std::vector<double>>("target_point", {0.0, 0.0, 0.0});
 
 	// Obtener el parámetro y convertirlo a geometry_msgs::msg::Point

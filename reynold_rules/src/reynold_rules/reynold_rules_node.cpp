@@ -258,14 +258,16 @@ ReynoldRulesNode::ReynoldRulesNode()
 	   std::bind(&ReynoldRulesNode::map_callback, this, std::placeholders::_1)
 	);
 
-  request_map();
-  if(map_) {
-    checkPathsBetweenWaypoints();
-    RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
-    timer_ = create_wall_timer(control_cycle_period_, std::bind(&ReynoldRulesNode::control_cycle, this));
-  } else {
-    RCLCPP_INFO(get_logger(), "Node created, waiting for map...");
-  }
+  // request_map();
+  // if(map_) {
+  //   checkPathsBetweenWaypoints();
+  //   RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
+  //   timer_ = create_wall_timer(control_cycle_period_, std::bind(&ReynoldRulesNode::control_cycle, this));
+  // } else {
+  //   RCLCPP_INFO(get_logger(), "Node created, waiting for map...");
+  // }
+	
+  timer_ = create_wall_timer(control_cycle_period_, std::bind(&ReynoldRulesNode::control_cycle, this));
 }
 
 void
@@ -664,76 +666,78 @@ std::vector<geometry_msgs::msg::Vector3>
 ReynoldRulesNode::nav_2_point_rule()
 {
 	std::vector<geometry_msgs::msg::Vector3> nav_2_point_vectors;
+  nav_2_point_vectors.resize(NUMBER_DRONES);
+  return nav_2_point_vectors;
 
-	if (this->navigationMethod_ == NavigationMethod::RosParam) {
-		std::vector<double> target_point_vec;
-		this->get_parameter("target_point", target_point_vec);
-
-		if (target_point_vec.size() == 3) {
-			target_point_.x = target_point_vec[0];
-			target_point_.y = target_point_vec[1];
-			target_point_.z = target_point_vec[2];
-		}
-		// Verificar si hay un nuevo punto objetivo
-		if (this->target_point_.x != this->prev_point.x ||
-		    this->target_point_.y != this->prev_point.y ||
-			this->target_point_.z != this->prev_point.z) {
-			recalculatePath();
-			this->prev_point = this->target_point_;
-			RCLCPP_INFO(this->get_logger(), "New target point: x=%.2f, y=%.2f, z=%.2f",
-						target_point_.x, target_point_.y, target_point_.z);
-		}
-
-		// Verificar si el enjambre ha llegado al waypoint actual
-		geometry_msgs::msg::Point average_position;
-		for (const auto& robot : this->robots_) {
-			average_position.x += robot->pose.pose.position.x;
-			average_position.y += robot->pose.pose.position.y;
-			average_position.z += robot->pose.pose.position.z;
-		}
-		average_position.x /= this->NUMBER_DRONES;
-		average_position.y /= this->NUMBER_DRONES;
-		average_position.z /= this->NUMBER_DRONES;
-
-		if (get_distance_2d(average_position, this->path_.front()) < this->DIST_THRESHOLD) {
-			if (this->path_.front() != this->target_point_) {
-				this->path_.erase(this->path_.begin()); // Eliminar waypoint del camino
-			}
-		}
-
-		// Calcular los vectores de navegación para los robots hacia el waypoint actual del
-		// camino
-		for (const auto& robot : this->robots_) {
-			const auto vec = vector_2_points(robot->pose.pose.position,
-			                                 this->path_.front(),
-			                                 this->MAX_LIN_VEL);
-			nav_2_point_vectors.push_back(vec);
-		}
-	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
-    if (--rendezvous_counter_ <= 0) {
-      rendezvous_counter_ = rendezvous_recalc_period_;
-      rendezvous_protocol();
-    }
-		
-		if (this->paths_.size() != this->robots_.size()) {
-			throw std::runtime_error{"robots_ and paths_ sizes don't match"};
-		}
-
-		for (size_t i = 0; i < this->robots_.size(); i++) {
-			auto& path      = paths_[i];
-			const auto& pos = robots_[i]->pose.pose.position;
-			if ((path.size() > 1) &&
-			    (get_distance_2d(pos, path.front()) < this->DIST_THRESHOLD)) {
-				path.erase(path.begin());
-			}
-
-			auto vec = vector_2_points(pos, path.front(), this->MAX_LIN_VEL);
-			nav_2_point_vectors.push_back(vec);
-		}
-	}
-
-	// Publicar los vectores de navegación
-	return nav_2_point_vectors;
+	// if (this->navigationMethod_ == NavigationMethod::RosParam) {
+	// 	std::vector<double> target_point_vec;
+	// 	this->get_parameter("target_point", target_point_vec);
+	//
+	// 	if (target_point_vec.size() == 3) {
+	// 		target_point_.x = target_point_vec[0];
+	// 		target_point_.y = target_point_vec[1];
+	// 		target_point_.z = target_point_vec[2];
+	// 	}
+	// 	// Verificar si hay un nuevo punto objetivo
+	// 	if (this->target_point_.x != this->prev_point.x ||
+	// 	    this->target_point_.y != this->prev_point.y ||
+	// 		this->target_point_.z != this->prev_point.z) {
+	// 		recalculatePath();
+	// 		this->prev_point = this->target_point_;
+	// 		RCLCPP_INFO(this->get_logger(), "New target point: x=%.2f, y=%.2f, z=%.2f",
+	// 					target_point_.x, target_point_.y, target_point_.z);
+	// 	}
+	//
+	// 	// Verificar si el enjambre ha llegado al waypoint actual
+	// 	geometry_msgs::msg::Point average_position;
+	// 	for (const auto& robot : this->robots_) {
+	// 		average_position.x += robot->pose.pose.position.x;
+	// 		average_position.y += robot->pose.pose.position.y;
+	// 		average_position.z += robot->pose.pose.position.z;
+	// 	}
+	// 	average_position.x /= this->NUMBER_DRONES;
+	// 	average_position.y /= this->NUMBER_DRONES;
+	// 	average_position.z /= this->NUMBER_DRONES;
+	//
+	// 	if (get_distance_2d(average_position, this->path_.front()) < this->DIST_THRESHOLD) {
+	// 		if (this->path_.front() != this->target_point_) {
+	// 			this->path_.erase(this->path_.begin()); // Eliminar waypoint del camino
+	// 		}
+	// 	}
+	//
+	// 	// Calcular los vectores de navegación para los robots hacia el waypoint actual del
+	// 	// camino
+	// 	for (const auto& robot : this->robots_) {
+	// 		const auto vec = vector_2_points(robot->pose.pose.position,
+	// 		                                 this->path_.front(),
+	// 		                                 this->MAX_LIN_VEL);
+	// 		nav_2_point_vectors.push_back(vec);
+	// 	}
+	// } else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
+ //    if (--rendezvous_counter_ <= 0) {
+ //      rendezvous_counter_ = rendezvous_recalc_period_;
+ //      rendezvous_protocol();
+ //    }
+	// 	
+	// 	if (this->paths_.size() != this->robots_.size()) {
+	// 		throw std::runtime_error{"robots_ and paths_ sizes don't match"};
+	// 	}
+	//
+	// 	for (size_t i = 0; i < this->robots_.size(); i++) {
+	// 		auto& path      = paths_[i];
+	// 		const auto& pos = robots_[i]->pose.pose.position;
+	// 		if ((path.size() > 1) &&
+	// 		    (get_distance_2d(pos, path.front()) < this->DIST_THRESHOLD)) {
+	// 			path.erase(path.begin());
+	// 		}
+	//
+	// 		auto vec = vector_2_points(pos, path.front(), this->MAX_LIN_VEL);
+	// 		nav_2_point_vectors.push_back(vec);
+	// 	}
+	// }
+	//
+	// // Publicar los vectores de navegación
+	// return nav_2_point_vectors;
 }
 
 std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()

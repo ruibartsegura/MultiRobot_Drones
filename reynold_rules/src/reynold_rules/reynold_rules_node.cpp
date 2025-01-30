@@ -448,6 +448,26 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::nav_2_point_rule()
 {
 	std::vector<geometry_msgs::msg::Vector3> nav_2_point_vectors;
 	nav_2_point_vectors.resize(NUMBER_DRONES);
+
+	if (this->navigationMethod_ == NavigationMethod::RosParam) {
+	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
+		if (--rendezvous_counter_ <= 0) {
+			rendezvous_counter_ = rendezvous_recalc_period_;
+			rendezvous_protocol();
+		}
+
+		if (this->paths_.size() != this->robots_.size()) {
+			throw std::runtime_error{"robots_ and paths_ sizes don't match"};
+		}
+
+		for (size_t i = 0; i < this->robots_.size(); i++) {
+			const auto& pos  = odom(i)->pose.pose.position;
+			const auto& path = paths_[i];
+			nav_2_point_vectors[i] = vector_2_points(pos, path.front(), this->MAX_LIN_VEL);
+		}
+	}
+
+	// Publicar los vectores de navegación
 	return nav_2_point_vectors;
 }
 
@@ -524,21 +544,21 @@ void ReynoldRulesNode::control_cycle()
 	}
 
 	std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
-			separation_rule(),
-			// avoidance_rule(),
-			// aligment_rule(),
-			// cohesion_rule(),
-			// formation_control(),
-			// nav_2_point_rule(),
+	        separation_rule(),
+	        // avoidance_rule(),
+	        // aligment_rule(),
+	        // cohesion_rule(),
+	        // formation_control(),
+	        nav_2_point_rule(),
 	};
 
 	std::vector<double> weights = {
-			separation_weight_,
-			// obstacle_avoidance_weight_,
-			// cohesion_weight_,
-			// alignment_weight_,
-			// formation_weight_,
-			// nav2point_weight_,
+	        separation_weight_,
+	        // obstacle_avoidance_weight_,
+	        // cohesion_weight_,
+	        // alignment_weight_,
+	        // formation_weight_,
+	        nav2point_weight_,
 	};
 
 	for (size_t j = 0; j < rules.size(); j++) {
@@ -682,6 +702,32 @@ void ReynoldRulesNode::formation_control_setup()
 
 	if (formation_type_ != NONE) {
 		set_formation_matrix(get_formation_points());
+	}
+}
+
+void ReynoldRulesNode::rendezvous_protocol()
+{
+	// Implement a consensus-based rendezvous protocol. vector of a rendezvous protocol is to
+	// gather the robots in a common position in space. Test the behavior for at least two fixed
+	// directed communication topologies for random initial positions of the robots.
+	this->paths_.clear();
+
+	for (size_t i = 0; i < robots_.size(); i++) {
+		const auto& position = robots_[i]->pose.pose.position;
+		auto x               = position;
+		for (size_t j = 0; j < robots_.size(); j++) {
+			// implement the consensus equation
+			const auto a_ij = topology_.at(i).at(j);
+			const auto d    = vector_2_points(position, robots_[j]->pose.pose.position);
+
+			// x += a_ij * d
+			x = add(x, mul(a_ij, d));
+		}
+
+		// update the robot's navigation to x
+		std::vector<geometry_msgs::msg::Point> path;
+		path.push_back(x);
+		this->paths_.emplace_back(path);
 	}
 }
 

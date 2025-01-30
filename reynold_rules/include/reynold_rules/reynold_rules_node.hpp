@@ -108,7 +108,7 @@ private:
 
 	// Nav_2_Point
 	void recalculatePath();
-  geometry_msgs::msg::Point find_nearest_waypoint(const geometry_msgs::msg::Point& p);
+  	geometry_msgs::msg::Point find_nearest_waypoint(const geometry_msgs::msg::Point& p);
 
 	std::vector<geometry_msgs::msg::Point> findPathThroughWaypoints(
 			const geometry_msgs::msg::Point& start, const geometry_msgs::msg::Point& target);

@@ -122,6 +122,7 @@ ReynoldRulesNode::ReynoldRulesNode() : Node("reynold_rules_node"), map_(nullptr)
 	// Parameters
 	declare_parameter("NUMBER_DRONES", NUMBER_DRONES);
 	get_parameter("NUMBER_DRONES", NUMBER_DRONES);
+  RCLCPP_INFO(get_logger(), "NUMBER_DRONES: %ld", NUMBER_DRONES);
 
 	declare_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
 	get_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
@@ -262,8 +263,9 @@ void ReynoldRulesNode::odom_callback(const nav_msgs::msg::Odometry::SharedPtr da
 	// Asignación de SharedPtr en el vector
 	int drone_number = std::stoi(number);
 
-	if (drone_number >= robots_.size()) {
-		RCLCPP_WARN(get_logger(), "Discard odom for drone %s", data->child_frame_id);
+	if (drone_number > robots_.size()) {
+		RCLCPP_WARN(get_logger(), "Discard odom for drone %s", data->child_frame_id.c_str());
+    return;
 	}
 
 	robots_[drone_number - 1] = data;
@@ -453,6 +455,7 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::nav_2_point_rule()
 	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
 		if (--rendezvous_counter_ <= 0) {
 			rendezvous_counter_ = rendezvous_recalc_period_;
+      RCLCPP_INFO(get_logger(), "Next rendezvous step");
 			rendezvous_protocol();
 		}
 
@@ -592,7 +595,7 @@ void ReynoldRulesNode::control_cycle()
 		// std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
 		//           << ", y=" << vel.linear.y << std::endl;
 
-		// publishers_[i]->publish(vel);
+		publishers_[i]->publish(vel);
 	}
 }
 

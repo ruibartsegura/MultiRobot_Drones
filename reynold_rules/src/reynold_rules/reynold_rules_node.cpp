@@ -140,6 +140,7 @@ ReynoldRulesNode::ReynoldRulesNode() : Node("reynold_rules_node"), map_(nullptr)
 	// Parameters
 	declare_parameter("NUMBER_DRONES", NUMBER_DRONES);
 	get_parameter("NUMBER_DRONES", NUMBER_DRONES);
+  RCLCPP_INFO(get_logger(), "NUMBER_DRONES: %ld", NUMBER_DRONES);
 
 	declare_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
 	get_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
@@ -698,6 +699,7 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::nav_2_point_rule()
 	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
 		if (--rendezvous_counter_ <= 0) {
 			rendezvous_counter_ = rendezvous_recalc_period_;
+      RCLCPP_INFO(get_logger(), "Next rendezvous step");
 			rendezvous_protocol();
 		}
 

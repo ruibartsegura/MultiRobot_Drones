@@ -47,7 +47,7 @@ public:
 private:
 	std::vector<bool> ready_;
 
-	int NUMBER_DRONES{4};
+	int NUMBER_DRONES{3};
 	double MAX_LIN_VEL{1};
 	double MIN_LIN_VEL{0.0};
 	double DIST_THRESHOLD{1};

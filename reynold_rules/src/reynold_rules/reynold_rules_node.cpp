@@ -277,7 +277,7 @@ void ReynoldRulesNode::map_callback(const nav_msgs::msg::OccupancyGrid::SharedPt
 {
 	const bool first = !map_;
 	this->map_       = data;
-	checkPathsBetweenWaypoints();
+	//checkPathsBetweenWaypoints();
 
 	if (first) {
 		RCLCPP_INFO(get_logger(), "Map received, starting control_cycle");
@@ -576,65 +576,29 @@ void ReynoldRulesNode::control_cycle()
 	}
 }
 
-void ReynoldRulesNode::checkPathsBetweenWaypoints()
+
+geometry_msgs::msg::Vector3 ReynoldRulesNode::vector_2_points(const geometry_msgs::msg::Point point1,
+                                                              const geometry_msgs::msg::Point point2,
+                                                              std::optional<double> max_length)
 {
-	for (const auto& wp : waypoints_) {
-		auto neighbors = findNeighbors(waypoints_, wp);
-		for (const auto& neighbor : neighbors) {
-			auto start = std::make_pair(wp.x, wp.y);
-			auto end   = std::make_pair(neighbor.x, neighbor.y);
-			if (isPathClear(start, end)) {
-				RCLCPP_INFO(this->get_logger(),
-				            "Free way between (%f, %f) and (%f, %f).",
-				            start.first,
-				            start.second,
-				            end.first,
-				            end.second);
-			} else {
-				RCLCPP_WARN(this->get_logger(),
-				            "Obstacle between (%f, %f) and (%f, %f).",
-				            start.first,
-				            start.second,
-				            end.first,
-				            end.second);
-			}
-		}
+	geometry_msgs::msg::Vector3 vector;
+
+	// Calcular las componentes del vector
+	vector.x = point2.x - point1.x;
+	vector.y = point2.y - point1.y;
+
+	if (max_length) {
+		// Calcular la longitud del vector
+	       const double vector_length = std::sqrt(vector.x * vector.x + vector.y * vector.y);
+
+               // Limitar la velocidad lineal máxima
+               if (vector_length > max_length.value()) {
+			double factor = max_length.value() / vector_length;
+			vector.x *= factor;
+			vector.y *= factor;
+               }
 	}
-}
-
-void ReynoldRulesNode::rendezvous_protocol()
-{
-	// Implement a consensus-based rendezvous protocol. vector of a rendezvous protocol is to
-	// gather the robots in a common position in space. Test the behavior for at least two fixed
-	// directed communication topologies for random initial positions of the robots.
-	this->paths_.clear();
-
-	for (size_t i = 0; i < robots_.size(); i++) {
-		const auto& position = odom(i)->pose.pose.position;
-		auto x               = position;
-		for (size_t j = 0; j < robots_.size(); j++) {
-			// implement the consensus equation
-			const auto a_ij = topology_.at(i).at(j);
-			const auto d    = vector_2_points(position, odom(j)->pose.pose.position);
-
-			// x += a_ij * d
-			x = add(x, mul(a_ij, d));
-		}
-
-		// update the robot's navigation to x
-		const auto firstWaypoint = find_nearest_waypoint(odom(i)->pose.pose.position);
-		const auto lastWaypoint  = find_nearest_waypoint(x);
-		auto path                = findPathThroughWaypoints(firstWaypoint, lastWaypoint);
-		path.push_back(x);
-
-		auto wp = path.front();
-		wp.z    = position.z;
-		if (path.size() > 1 && get_distance(position, wp) < this->DIST_THRESHOLD) {
-			path.erase(path.begin());
-		}
-
-		this->paths_.emplace_back(path);
-	}
+	return vector;
 }
 
 std::vector<geometry_msgs::msg::Point> ReynoldRulesNode::get_formation_points()

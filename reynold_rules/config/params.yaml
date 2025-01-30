@@ -1,12 +1,12 @@
 /reynold_rules_node:
   ros__parameters:
     use_sim_time: true
-    NUMBER_DRONES: 4
+    NUMBER_DRONES: 3
     MIN_LIN_VEL: 0.2
     MAX_LIN_VEL: 0.4
     DIST_THRESHOLD: 0.4
     navigation_method: "RosParam"
-    topology: "0,1,1,1;1,0,1,1;1,1,0,1;1,1,1,0"
+    topology: "0,1,1,;1,0,1,;1,1,0,;1,1,1,"
     separation_weight: 0.4
     alignment_weight: 0.3
     nav2point_weight: 0.2
@@ -16,9 +16,9 @@
     control_cycle_period_ms: 500
     rendezvous_recalc_period: 50 #update the rendezvous paths every n control cycles
     MAX_VEL_DIFF_FACTOR: 0.4
-    formation_type: 2 # 1->None, 2->line, 3->triangle, 4->square
-    side_length: 1.5
-    view_range: 0.8
+    formation_type: 3 # 1->None, 2->line, 3->triangle, 4->square
+    side_length: 1.0
+    view_range: 1.5
     view_angle: 180.0
     view_split: 0.0
     target_point: [0.0, 0.0, 0.0]

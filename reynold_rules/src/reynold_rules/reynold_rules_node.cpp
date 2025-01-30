@@ -524,21 +524,21 @@ void ReynoldRulesNode::control_cycle()
 	}
 
 	std::vector<std::vector<geometry_msgs::msg::Vector3>> rules = {
-	        separation_rule(),
-	        avoidance_rule(),
-	        aligment_rule(),
-	        cohesion_rule(),
-	        formation_control(),
-	        nav_2_point_rule(),
+			separation_rule(),
+			// avoidance_rule(),
+			// aligment_rule(),
+			// cohesion_rule(),
+			// formation_control(),
+			// nav_2_point_rule(),
 	};
 
 	std::vector<double> weights = {
-	        separation_weight_,
-	        obstacle_avoidance_weight_,
-	        cohesion_weight_,
-	        alignment_weight_,
-	        formation_weight_,
-	        nav2point_weight_,
+			separation_weight_,
+			// obstacle_avoidance_weight_,
+			// cohesion_weight_,
+			// alignment_weight_,
+			// formation_weight_,
+			// nav2point_weight_,
 	};
 
 	for (size_t j = 0; j < rules.size(); j++) {
@@ -572,7 +572,7 @@ void ReynoldRulesNode::control_cycle()
 		// std::cout << "VELOCITY " << i+1 << ": x=" << vel.linear.x
 		//           << ", y=" << vel.linear.y << std::endl;
 
-		publishers_[i]->publish(vel);
+		// publishers_[i]->publish(vel);
 	}
 }
 

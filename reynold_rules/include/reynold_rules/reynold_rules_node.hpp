@@ -37,6 +37,8 @@ public:
 	std::vector<geometry_msgs::msg::Vector3> nav_2_point_rule();
 	std::vector<geometry_msgs::msg::Vector3> avoidance_rule();
 
+  nav_msgs::msg::Odometry::SharedPtr odom(size_t robot_index);
+
 	/// @brief execute the rendezvous_protocol and update each robot's path in paths_
 	void rendezvous_protocol();
   	void formation_control_setup();

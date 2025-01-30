@@ -872,6 +872,13 @@ ReynoldRulesNode::control_cycle()
 			nav2point_weight_,
 	};
 
+	for (size_t j = 0; j < rules.size(); j++) {
+		if (rules[j].size() != NUMBER_DRONES) {
+			throw std::runtime_error{"Vector " + std::to_string(j) + " has unexpected size" +
+			                         std::to_string(rules[j].size())};
+		}
+	}
+
 	for (size_t i = 0; i < static_cast<size_t>(NUMBER_DRONES); i++) {
 		geometry_msgs::msg::Vector3 total_vector;
 

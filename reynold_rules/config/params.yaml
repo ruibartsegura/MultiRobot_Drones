@@ -7,18 +7,18 @@
     DIST_THRESHOLD: 0.4
     navigation_method: "RosParam"
     topology: "0,1,1;1,0,0;1,0,0"
-    separation_weight: 0.4
+    separation_weight: 5.0
     alignment_weight: 0.1
-    nav2point_weight: 0.4
-    cohesion_weight: 0.1
+    nav2point_weight: 0.2
+    cohesion_weight: 0.0
     obstacle_avoidance_weight: 0.0
-    formation_weight: 0.3
+    formation_weight: 0.2
     control_cycle_period_ms: 500
     rendezvous_recalc_period: 50 #update the rendezvous paths every n control cycles
     MAX_VEL_DIFF_FACTOR: 0.4
-    formation_type: 1 # 1->None, 2->line, 3->triangle, 4->square
+    formation_type: 2 # 1->None, 2->line, 3->triangle, 4->square
     side_length: 0.6
     view_range: 1.0
     view_angle: 360.0
     view_split: 0.0
-    target_point: [0.0, 0.0, 0.0]
+    target_point: [1.0, 1.0, 1.0]

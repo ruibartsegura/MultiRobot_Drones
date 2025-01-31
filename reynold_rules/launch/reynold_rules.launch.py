@@ -33,6 +33,6 @@ def generate_launch_description():
     # Crear LaunchDescription y agregar las acciones
     ld = LaunchDescription()
     ld.add_action(reynold_cmd)
-    ld.add_action(takeoff_service_call)
+    # ld.add_action(takeoff_service_call)
 
     return ld

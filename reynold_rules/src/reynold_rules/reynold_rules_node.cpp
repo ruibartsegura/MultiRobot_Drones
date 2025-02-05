@@ -887,6 +887,12 @@ ReynoldRulesNode::control_cycle()
 			nav_2_point_rule(),
 	};
 
+	get_parameter("separation_weight", separation_weight_);
+	get_parameter("cohesion_weight", cohesion_weight_);
+	get_parameter("alignment_weight", alignment_weight_);
+	get_parameter("obstacle_avoidance_weight", obstacle_avoidance_weight_);
+	get_parameter("nav2point_weight", nav2point_weight_);
+
 	std::vector<double> weights = {
 			separation_weight_,
 			formation_weight_,
@@ -1089,11 +1095,12 @@ ReynoldRulesNode::formation_control()
 	if (new_formation_type == NONE) return formation_vectors;
 
 	if (new_formation_type != formation_type_) {
+    RCLCPP_INFO(get_logger(), "New formation_type: %ld", new_formation_type);
 		formation_type_ = new_formation_type;
 		set_formation_matrix(get_formation_points());
 	}
 
-	RCLCPP_INFO(get_logger(), "formation protocol type %d", formation_type_);
+	// RCLCPP_INFO(get_logger(), "formation protocol type %d", formation_type_);
 	for (int i = 0; i < NUMBER_DRONES; i++) {
 		geometry_msgs::msg::Vector3 final_vector;
 

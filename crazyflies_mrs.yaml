@@ -1,14 +1,15 @@
 # named list of all robots
 # black:  97 (problems)
 # green:  80
+# yellow: 85
 # orange: 90
 # blue:   ?
 # purple: 100
 #
 robots:
-  cf_1: # purple
+  cf_1: # green
     enabled: true
-    uri: radio://0/100/2M/E7E7E7E7E7
+    uri: radio://0/80/2M/E7E7E7E7E7
     initial_position: [0.0, 0.0, 0.0]
     type: cf21  # see robot_types
     # firmware_params:
@@ -20,9 +21,9 @@ robots:
     #     topic_name3: 
     #       frequency: 1
     #       vars: ["acc.x", "acc.y"]
-  cf_2: # green
+  cf_2: # yellow
     enabled: true
-    uri: radio://0/80/2M/E7E7E7E7E7
+    uri: radio://0/85/2M/E7E7E7E7E7
     initial_position: [0.0, 0.0, 0.0]
     type: cf21  # see robot_types
   

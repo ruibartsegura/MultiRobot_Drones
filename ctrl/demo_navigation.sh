@@ -17,6 +17,13 @@ echo "Press enter to continue: navigate to (0,-1)"; read
 ros2 param set /reynold_rules_node target_point      [0.0,-1.0,1.0]
 ros2 param set /reynold_rules_node nav2point_weight  0.2
 
+echo "Press enter to continue: formation line"; read type
+ros2 param set /reynold_rules_node nav2point_weight  0.0
+ros2 param set /reynold_rules_node formation_type    2
+
+echo "Press enter to continue: formation triangle"; read type
+ros2 param set /reynold_rules_node formation_type    3
+
 echo "Press enter to continue: navigate to (1,1)"; read
 ros2 param set /reynold_rules_node target_point      [1.0,1.0,1.0]
 ros2 param set /reynold_rules_node nav2point_weight  0.2

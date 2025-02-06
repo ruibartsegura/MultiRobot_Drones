@@ -140,7 +140,7 @@ ReynoldRulesNode::ReynoldRulesNode() : Node("reynold_rules_node"), map_(nullptr)
 	// Parameters
 	declare_parameter("NUMBER_DRONES", NUMBER_DRONES);
 	get_parameter("NUMBER_DRONES", NUMBER_DRONES);
-  RCLCPP_INFO(get_logger(), "NUMBER_DRONES: %ld", NUMBER_DRONES);
+  RCLCPP_INFO(get_logger(), "NUMBER_DRONES: %d", NUMBER_DRONES);
 
 	declare_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
 	get_parameter("MIN_LIN_VEL", MIN_LIN_VEL);
@@ -223,6 +223,7 @@ ReynoldRulesNode::ReynoldRulesNode() : Node("reynold_rules_node"), map_(nullptr)
 	get_parameter("navigation_method", navigationMethod);
 	if (navigationMethod == "Rendezvous") {
 		navigationMethod_ = NavigationMethod::Rendezvous;
+    RCLCPP_INFO(get_logger(), "navigation_method: Rendezvous");
 	}
 
 	std::string topology;
@@ -699,14 +700,14 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::nav_2_point_rule()
 	} else if (this->navigationMethod_ == NavigationMethod::Rendezvous) {
 		if (--rendezvous_counter_ <= 0) {
 			rendezvous_counter_ = rendezvous_recalc_period_;
-      RCLCPP_INFO(get_logger(), "Next rendezvous step");
+      // RCLCPP_INFO(get_logger(), "Next rendezvous step");
 			rendezvous_protocol();
 		}
 
 		if (this->paths_.size() != this->robots_.size()) {
 			throw std::runtime_error{"robots_ and paths_ sizes don't match"};
 		}
-
+    
 		for (size_t i = 0; i < this->robots_.size(); i++) {
 			const auto& pos  = odom(i)->pose.pose.position;
 			const auto& path = paths_[i];
@@ -795,6 +796,13 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::avoidance_rule()
 		vectors.emplace_back(sum_weighted_repellent_vectors(i));
 	}
 	return vectors;
+}
+
+nav_msgs::msg::Odometry::SharedPtr ReynoldRulesNode::odom(size_t robot_index) {
+  if(robot_index > robots_.size() || !robots_[robot_index]) {
+    throw std::runtime_error{"Accessing invalid odom " + std::to_string(robot_index)};
+  }
+  return robots_[robot_index];
 }
 
 geometry_msgs::msg::Vector3 ReynoldRulesNode::sum_weighted_repellent_vectors(int robot_index)
@@ -1149,7 +1157,7 @@ std::vector<geometry_msgs::msg::Vector3> ReynoldRulesNode::formation_control()
 	}
 
 	if (new_formation_type != formation_type_) {
-		RCLCPP_INFO(get_logger(), "New formation_type: %ld", new_formation_type);
+		RCLCPP_INFO(get_logger(), "New formation_type: %d", new_formation_type);
 		formation_type_ = new_formation_type;
 		set_formation_matrix(get_formation_points());
 	}

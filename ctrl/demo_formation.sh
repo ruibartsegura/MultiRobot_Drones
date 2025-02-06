@@ -10,6 +10,7 @@ LAUNCH=$(ros2 pkg prefix reynold_rules)/share/reynold_rules/launch/reynold_rules
 LOG=/tmp/reynold_rules_$(date +%Y%m%d-%H%M).log
 echo "Launching $LAUNCH ..."
 ros2 launch $LAUNCH & #> $LOG 2>&1 &
+proc_id=$!
 echo "Spawned pid $! - logging to $LOG"
 
 echo "Press enter to continue: navigate to (0, 1.5)"; read
@@ -23,8 +24,9 @@ ros2 param set /reynold_rules_node formation_type    2
 echo "Press enter to continue: formation triangle"; read
 ros2 param set /reynold_rules_node formation_type    3
 
-echo "Press enter to continue: land"; read
-./land_all.sh
 echo "Press enter to continue: stop reynold_rules_node"; read
 killall reynold_rules_node --signal SIGINT
 
+echo "Press enter to continue: land"; read
+kill $proc_id
+./land_all.sh

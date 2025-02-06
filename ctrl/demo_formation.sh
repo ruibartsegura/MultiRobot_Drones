@@ -1,4 +1,4 @@
-#!/bin/bash
+!/bin/bash
 source /opt/ros/${ROS_DISTRO}/setup.bash
 source ~/ros2_ws/install/setup.bash
 
@@ -15,8 +15,9 @@ echo "Spawned pid $! - logging to $LOG"
 
 end="n";
 while [ $end != "y" ]; do
-    echo "Enter x and y coord. Press enter to continue"; read x y
-    ros2 param set /reynold_rules_node nav2point_weight  0.2
+    echo "Enter x coord. Press enter to continue"; read x
+    echo "Enter y coord. Press enter to continue"; read y
+    ros2 param set /reynold_rules_node nav2point_weight  0.5
     ros2 param set /reynold_rules_node target_point      [$x,$y,1.0]
 
     echo "Press enter to continue: formation line"; read type
